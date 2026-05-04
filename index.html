@@ -1628,7 +1628,7 @@ async function loadBurnLeaderboard(){
   const el=document.getElementById('burn-leaderboard-list');if(!el)return;
   el.textContent='Loading...';
   const {data,error}=await _sb.from('burn_leaderboard').select('name,burn_total,burn_rank,game_rank').order('burn_total',{ascending:false}).limit(20);
-  if(error||!data){el.textContent='Could not load.';return;}
+  if(error||!data){el.textContent='Error: '+(error?error.message:'no data');return;}
   if(data.length===0){el.textContent='No burns yet. Be the first!';return;}
   const myName=G.playerName||'';
   el.innerHTML=data.map((p,i)=>{
