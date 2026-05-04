@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Afghan Farm</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --g:#2d5a1b;--g2:#4a8c2a;--g3:#6ab83e;--g4:#a8d878;
+  --gold:#f0c040;--gold2:#e8a800;
+  --dark:#0e1a0a;--dark2:#172810;--dark3:#1f3614;
+  --card:#1a2e10;--card2:#223818;
+  --text:#e8f5d8;--text2:#9dc878;--text3:#6a9448;
+  --red:#e84040;--blue:#4090e8;--purple:#9b59b6;
+  --radius:14px;--radius-sm:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+html,body{height:100%;overflow:hidden;background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+body{display:flex;flex-direction:column;max-width:100vw;}
+
+/* TOPBAR */
+#topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--dark2);border-bottom:1px solid #2a4018;flex-shrink:0;gap:6px;}
+#topbar .money{font-size:14px;font-weight:600;color:var(--gold);}
+#topbar .seeds{font-size:12px;color:var(--g3);}
+.brand{font-family:'Playfair Display',serif;font-size:11px;color:var(--text3);letter-spacing:1px;text-align:right;}
+#rank-display{font-size:11px;color:var(--gold);font-weight:600;text-align:center;padding:4px 8px;background:rgba(240,192,64,0.1);border-radius:20px;border:1px solid rgba(240,192,64,0.3);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* TABS */
+#tabs{display:flex;background:var(--dark2);border-bottom:1px solid #2a4018;flex-shrink:0;overflow-x:auto;scrollbar-width:none;padding:0 2px;}
+#tabs::-webkit-scrollbar{display:none;}
+.tab{flex:0 0 auto;padding:8px 10px;font-size:10px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:52px;}
+.tab .ticon{font-size:16px;}
+.tab.active{color:var(--g3);border-bottom-color:var(--g3);}
+
+/* PAGES */
+#pages{flex:1;overflow:hidden;position:relative;}
+.page{display:none;height:100%;overflow-y:auto;padding:10px;padding-bottom:24px;-webkit-overflow-scrolling:touch;}
+.page.active{display:block;}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid #2a4018;border-radius:var(--radius);padding:12px;margin-bottom:10px;}
+.card-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;}
+
+/* BUTTONS — big & smooth */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:13px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:transform .1s,background .15s;font-family:'DM Sans',sans-serif;min-height:48px;user-select:none;-webkit-user-select:none;}
+.btn:active{transform:scale(0.93);}
+.btn-green{background:var(--g2);color:#fff;}
+.btn-green:active{background:var(--g3);}
+.btn-gold{background:var(--gold2);color:#1a0e00;}
+.btn-gold:active{background:var(--gold);}
+.btn-red{background:#8b2020;color:#fff;}
+.btn-red:active{background:var(--red);}
+.btn-blue{background:#1a4a8b;color:#fff;}
+.btn-blue:active{background:var(--blue);}
+.btn-purple{background:#6a1a8b;color:#fff;}
+.btn-sm{padding:9px 14px;font-size:12px;min-height:38px;}
+.btn-block{width:100%;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.stat-box{background:var(--card2);border-radius:var(--radius-sm);padding:10px 12px;}
+.stat-box .sl{font-size:11px;color:var(--text3);}
+.stat-box .sv{font-size:16px;font-weight:600;color:var(--text);}
+
+/* PROG BAR */
+.prog-wrap{background:#0e1a0a;border-radius:20px;height:8px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--g2),var(--g3));transition:width .3s;}
+
+/* TAP BUTTON */
+#tap-container{display:flex;flex-direction:column;align-items:center;padding:8px 0;}
+#tap-plant{width:130px;height:130px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#3a7a20,#1a3a0a);border:3px solid var(--g2);display:flex;align-items:center;justify-content:center;font-size:60px;cursor:pointer;position:relative;box-shadow:0 0 30px rgba(74,140,42,0.3);transition:transform .07s;user-select:none;-webkit-user-select:none;}
+#tap-plant.pop{animation:bpop .12s ease;}
+@keyframes bpop{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+#floats{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;}
+.float{position:absolute;font-size:15px;font-weight:600;color:var(--g3);pointer-events:none;animation:floatUp .9s ease forwards;}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-70px) scale(0.7)}}
+
+/* PLOTS */
+.plots-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.plot{background:var(--card2);border:1.5px solid #2a4018;border-radius:var(--radius-sm);padding:10px 6px;text-align:center;cursor:pointer;min-height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:border-color .2s;user-select:none;}
+.plot:active{transform:scale(0.95);}
+.plot.planted{border-color:var(--g2);}
+.plot.ready{border-color:var(--gold);animation:pglow 1s infinite;}
+.plot.auto{border-color:var(--purple);background:#1a1030;}
+@keyframes pglow{0%,100%{box-shadow:0 0 0 0 rgba(240,192,64,0)}50%{box-shadow:0 0 0 4px rgba(240,192,64,0.3)}}
+.plot .picon{font-size:26px;}
+.plot .plabel{font-size:10px;color:var(--text3);}
+.plot .ptimer{font-size:11px;color:var(--gold);font-weight:600;}
+
+/* UPGRADE ITEMS */
+.upg-item{background:var(--card2);border:1px solid #2a4018;border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .15s;}
+.upg-item:active{transform:scale(0.97);}
+.upg-item.locked{opacity:0.5;cursor:not-allowed;}
+.upg-item.maxed{border-color:var(--g);opacity:0.55;cursor:default;}
+.upg-icon{font-size:24px;flex-shrink:0;}
+.upg-info{flex:1;}
+.upg-name{font-size:13px;font-weight:600;color:var(--text);}
+.upg-desc{font-size:11px;color:var(--text3);}
+.upg-cost{font-size:12px;color:var(--gold);font-weight:600;white-space:nowrap;}
+
+/* BANK */
+.bank-card{background:linear-gradient(135deg,#1a2e10,#223818);border:1px solid var(--gold2);border-radius:var(--radius);padding:16px;margin-bottom:10px;}
+.bank-balance{font-size:26px;font-weight:700;color:var(--gold);font-family:'Playfair Display',serif;}
+.game-input{background:var(--dark3);border:1.5px solid #3a5820;border-radius:var(--radius-sm);color:var(--text);padding:11px 14px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.game-input:focus{border-color:var(--g3);}
+.input-row{display:flex;gap:8px;margin-top:8px;}
+.input-row .game-input{flex:1;}
+
+/* RE & BIZ LIVE */
+.re-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.re-card{background:var(--card2);border:1.5px solid #2a4018;border-radius:var(--radius-sm);padding:10px;text-align:center;cursor:pointer;transition:border-color .2s,box-shadow .3s;}
+.re-card.owned{border-color:var(--g2);}
+.re-card.earning{box-shadow:0 0 8px rgba(74,140,42,0.4);animation:earnglow .6s ease-out;}
+@keyframes earnglow{0%{box-shadow:0 0 0 0 rgba(240,192,64,0.6)}100%{box-shadow:0 0 10px rgba(74,140,42,0.3)}}
+.re-icon{font-size:28px;margin-bottom:4px;}
+.re-name{font-size:11px;font-weight:600;color:var(--text2);}
+.re-income{font-size:11px;color:var(--gold);}
+.re-level{font-size:10px;color:var(--g3);}
+
+.biz-item{background:var(--card2);border:1.5px solid #2a4018;border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:box-shadow .3s;}
+.biz-item.earning{box-shadow:0 0 8px rgba(240,192,64,0.3);}
+.biz-icon{font-size:28px;flex-shrink:0;}
+.biz-info{flex:1;}
+.biz-name{font-size:13px;font-weight:600;color:var(--text);}
+.biz-desc{font-size:11px;color:var(--text3);}
+.biz-income-live{font-size:12px;color:var(--gold);font-weight:600;}
+
+/* ROULETTE */
+#roulette-wheel{width:180px;height:180px;border-radius:50%;border:4px solid var(--gold2);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:60px;background:conic-gradient(#c00 0deg 90deg,#111 90deg 180deg,#c00 180deg 270deg,#111 270deg 360deg);transition:transform 4s cubic-bezier(.17,.67,.12,.99);box-shadow:0 0 20px rgba(240,192,64,0.4);}
+#roulette-ball{font-size:28px;}
+
+/* BEGGARS */
+.beggar-card{background:var(--card2);border:1px solid #2a4018;border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.beggar-avatar{font-size:32px;flex-shrink:0;}
+.beggar-info{flex:1;}
+.beggar-name{font-size:13px;font-weight:600;color:var(--text);}
+.beggar-nw{font-size:12px;color:var(--gold);}
+.beggar-msg{font-size:11px;color:var(--text3);font-style:italic;}
+
+/* TRADE / STOCKS */
+.stock-card{background:var(--card2);border:1.5px solid #2a4018;border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;}
+.stock-name{font-size:14px;font-weight:600;color:var(--text);}
+.stock-price{font-size:18px;font-weight:700;color:var(--gold);font-family:'Playfair Display',serif;}
+.stock-change{font-size:12px;font-weight:600;}
+.stock-change.up{color:#4cff90;}
+.stock-change.down{color:var(--red);}
+.price-bar{height:4px;border-radius:4px;margin:6px 0;background:linear-gradient(90deg,var(--red),var(--gold),#4cff90);}
+.stock-owned{font-size:11px;color:var(--text3);}
+
+/* BURN */
+.burn-card{background:linear-gradient(135deg,#2a0e0e,#1a1010);border:1px solid #8b3020;border-radius:var(--radius);padding:14px;margin-bottom:10px;}
+.burn-fire{font-size:48px;text-align:center;animation:flicker 0.5s infinite alternate;}
+@keyframes flicker{0%{transform:scale(1) rotate(-2deg)}100%{transform:scale(1.05) rotate(2deg)}}
+.burn-total{font-size:24px;font-weight:700;color:#ff6030;font-family:'Playfair Display',serif;}
+
+/* TOWER */
+.tower-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;background:#0a1a06;padding:8px;border-radius:var(--radius-sm);margin-bottom:10px;}
+.tower-cell{height:32px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.tc-path{background:#2a1a08;}
+.tc-empty{background:#0f2008;cursor:pointer;}
+.tc-empty:active{background:#1a3010;}
+.tc-tower{background:#1a4010;border:1px solid var(--g2);}
+.tc-enemy{background:#3a0808;border:1px solid var(--red);}
+
+/* RANKS */
+.rank-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+
+/* NOTIF */
+#notif{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--g2);color:#fff;padding:9px 20px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;z-index:1000;pointer-events:none;max-width:88vw;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#notif.show{opacity:1;}
+
+/* NAME MODAL */
+#name-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2000;display:flex;align-items:center;justify-content:center;}
+#name-box{background:var(--card);border:1px solid var(--g2);border-radius:var(--radius);padding:24px;max-width:320px;width:90%;}
+#name-box h2{font-family:'Playfair Display',serif;color:var(--gold);margin-bottom:8px;font-size:20px;}
+#name-box p{font-size:13px;color:var(--text3);margin-bottom:14px;}
+
+.footer-brand{text-align:center;padding:10px;font-family:'Playfair Display',serif;font-size:10px;color:var(--text3);letter-spacing:2px;opacity:0.6;}
+.sdiv{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin:12px 0 7px;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--g);border-radius:3px;}
+
+/* SLIDER */
+.bet-slider{width:100%;accent-color:var(--g3);height:6px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- NAME MODAL -->
+<div id="name-modal">
+  <div id="name-box">
+    <h2>🌿 Afghan Farm</h2>
+    <p>Enter your farmer name to begin your empire.</p>
+    <input class="game-input" id="name-input" type="text" placeholder="Your name..." maxlength="20" style="margin-bottom:12px;">
+    <button class="btn btn-green btn-block" onclick="setName()">Start Farming</button>
+    <div style="text-align:center;margin-top:10px;font-family:'Playfair Display',serif;font-size:10px;color:var(--text3);letter-spacing:2px;">Made by SLD</div>
+  </div>
+</div>
+
+<div id="topbar">
+  <div>
+    <div class="money" id="topbar-money">💰 $0</div>
+    <div class="seeds" id="topbar-seeds">🌿 0 seeds</div>
+  </div>
+  <div id="rank-display">👤 Newcomer</div>
+  <div style="text-align:right">
+    <div class="brand">AFGHAN FARM</div>
+    <div style="font-size:9px;color:var(--text3);letter-spacing:1px;">Made by SLD</div>
+  </div>
+</div>
+
+<div id="tabs">
+  <div class="tab active" onclick="showTab('farm')"><span class="ticon">🌿</span>Farm</div>
+  <div class="tab" onclick="showTab('plots')"><span class="ticon">🪴</span>Plots</div>
+  <div class="tab" onclick="showTab('seeds')"><span class="ticon">🔬</span>Seeds</div>
+  <div class="tab" onclick="showTab('bank')"><span class="ticon">🏦</span>Bank</div>
+  <div class="tab" onclick="showTab('realestate')"><span class="ticon">🏘</span>Property</div>
+  <div class="tab" onclick="showTab('biz')"><span class="ticon">💼</span>Biz</div>
+  <div class="tab" onclick="showTab('trade')"><span class="ticon">📦</span>Trade</div>
+  <div class="tab" onclick="showTab('mines')"><span class="ticon">💣</span>Mines</div>
+  <div class="tab" onclick="showTab('blackjack')"><span class="ticon">🃏</span>Blackjack</div>
+  <div class="tab" onclick="showTab('roulette')"><span class="ticon">🎡</span>Roulette</div>
+  <div class="tab" onclick="showTab('towers')"><span class="ticon">🗼</span>Towers</div>
+  <div class="tab" onclick="showTab('beggars')"><span class="ticon">🤲</span>Beggars</div>
+  <div class="tab" onclick="showTab('burn')"><span class="ticon">🔥</span>Burn</div>
+  <div class="tab" onclick="showTab('transfer')"><span class="ticon">💸</span>Transfer</div>
+  <div class="tab" onclick="showTab('leaderboard')"><span class="ticon">🥇</span>Top</div>
+  <div class="tab" onclick="showTab('ranks')"><span class="ticon">🏆</span>Ranks</div>
+</div>
+
+<div id="pages">
+
+<!-- FARM -->
+<div class="page active" id="page-farm">
+  <div id="tap-container">
+    <div id="tap-plant">🌿</div>
+    <div style="margin-top:10px;text-align:center;">
+      <div style="font-size:11px;color:var(--text3);">Tap to harvest Afghan Marijuana</div>
+      <div style="font-size:14px;color:var(--g3);font-weight:600;margin-top:3px;" id="tap-power">+1 seed/tap</div>
+    </div>
+    <div style="width:100%;margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px;">
+        <span>Harvest Combo</span><span id="combo-label">x1</span>
+      </div>
+      <div class="prog-wrap"><div class="prog-fill" id="combo-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-box"><div class="sl">Seeds/sec</div><div class="sv" id="stat-sps">0</div></div>
+    <div class="stat-box"><div class="sl">$/sec</div><div class="sv" id="stat-mps">$0</div></div>
+    <div class="stat-box"><div class="sl">Total Seeds</div><div class="sv" id="stat-total-seeds">0</div></div>
+    <div class="stat-box"><div class="sl">Plots Planted</div><div class="sv" id="stat-plots-planted">0</div></div>
+  </div>
+  <div class="sdiv">Farm Upgrades</div>
+  <div id="farm-upg-list"></div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- PLOTS -->
+<div class="page" id="page-plots">
+  <div class="card">
+    <div class="card-title">🪴 Grow Plots</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+      <span style="font-size:13px;color:var(--text2);">Plots: <b id="plot-count">3</b> | Planted: <b id="plot-planted-count" style="color:var(--g3);">0</b> | Ready: <b id="plot-ready-count" style="color:var(--gold);">0</b></span>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+      <button class="btn btn-green btn-sm" onclick="buyPlot()">+ Plot (<span id="plot-cost">500</span>🌿)</button>
+      <button class="btn btn-gold btn-sm" onclick="plantAll()">🌱 Plant All</button>
+      <button class="btn btn-blue btn-sm" onclick="harvestAll()">✂️ Harvest All</button>
+    </div>
+    <div class="plots-grid" id="plots-grid"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🤖 Auto-Planters</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Auto-planters automatically plant & harvest each individual plot. Very expensive!</div>
+    <div id="auto-planter-list"></div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- SEEDS -->
+<div class="page" id="page-seeds">
+  <div class="card">
+    <div class="card-title">🔬 Afghan Marijuana Strains</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px;">Upgrade strains for better yield, faster growth and higher value.</div>
+    <div id="seed-upg-list"></div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- BANK -->
+<div class="page" id="page-bank">
+  <div class="bank-card">
+    <div style="font-size:11px;color:var(--text3);">Bank Balance</div>
+    <div class="bank-balance" id="bank-balance-display">$0.00</div>
+    <div style="margin-top:6px;font-size:12px;color:var(--text3);">Interest: <span style="color:var(--gold);font-weight:600;">4% every 10 minutes</span></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:2px;">Next interest in: <span id="bank-timer" style="color:var(--g3);font-weight:600;">10:00</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Deposit</div>
+    <input class="game-input" type="number" id="deposit-input" placeholder="Amount ($)" min="1" style="margin-bottom:8px;">
+    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+      <button class="btn btn-sm btn-green" onclick="quickDeposit(0.1)">10%</button>
+      <button class="btn btn-sm btn-green" onclick="quickDeposit(0.25)">25%</button>
+      <button class="btn btn-sm btn-green" onclick="quickDeposit(0.5)">50%</button>
+      <button class="btn btn-sm btn-green" onclick="quickDeposit(1)">All In</button>
+    </div>
+    <button class="btn btn-green btn-block" onclick="doDeposit()">Deposit</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Withdraw</div>
+    <div class="input-row">
+      <input class="game-input" type="number" id="withdraw-input" placeholder="Amount ($)" min="1">
+      <button class="btn btn-gold" onclick="doWithdraw()">Withdraw</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Transaction Log</div>
+    <div id="bank-log" style="font-size:12px;color:var(--text3);max-height:130px;overflow-y:auto;"></div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- REAL ESTATE -->
+<div class="page" id="page-realestate">
+  <div class="card">
+    <div class="card-title">🏘 Real Estate Portfolio</div>
+    <div style="font-size:13px;color:var(--gold);font-weight:600;margin-bottom:10px;">💰 Portfolio Income: <span id="re-total-income">$0</span>/min</div>
+    <div class="re-grid" id="re-grid"></div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- BUSINESS -->
+<div class="page" id="page-biz">
+  <div class="card">
+    <div class="card-title">💼 Businesses</div>
+    <div style="font-size:13px;color:var(--gold);font-weight:600;margin-bottom:10px;">Total Biz Income: <span id="biz-total-income">$0</span>/min</div>
+    <div id="biz-list"></div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- TRADE -->
+<div class="page" id="page-trade">
+  <div class="card">
+    <div class="card-title">📦 Black Market Trade</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Prices shift every 15 seconds. Buy low, sell high!</div>
+    <div id="trade-list"></div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- MINES -->
+<div class="page" id="page-mines">
+  <div class="card">
+    <div class="card-title">💣 Mines</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Pick safe squares. Avoid mines. Cash out to keep winnings!</div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Bet amount: <span id="mines-bet-pct-label">10%</span> of cash ($<span id="mines-bet-display">0</span>)</div>
+      <input type="range" class="bet-slider" id="mines-bet-slider" min="1" max="100" value="10" oninput="updateMinesBet()">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);"><span>1%</span><span>50%</span><span>100%</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <span style="font-size:12px;color:var(--text3);">Mines:</span>
+      <select class="game-input" id="mines-count" style="width:80px;">
+        <option value="3">3</option><option value="5">5</option><option value="8">8</option><option value="12">12</option>
+      </select>
+      <button class="btn btn-green btn-sm" onclick="startMines()" id="mines-start-btn">Start</button>
+    </div>
+    <div style="text-align:center;margin-bottom:8px;">
+      <span style="font-size:14px;color:var(--gold);font-weight:600;" id="mines-multi">Multiplier: 1.00x</span>
+      <span style="font-size:12px;color:var(--text3);margin-left:10px;" id="mines-potential">Win: $0</span>
+    </div>
+    <div class="mines-grid" id="mines-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-width:320px;margin:0 auto;"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;">
+      <button class="btn btn-gold" onclick="cashoutMines()" id="mines-cashout" disabled>💰 Cash Out</button>
+    </div>
+    <div id="mines-result" style="text-align:center;font-size:14px;font-weight:600;padding:10px;margin-top:8px;display:none;border-radius:var(--radius-sm);"></div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- BLACKJACK -->
+<div class="page" id="page-blackjack">
+  <div style="background:#0d2a10;border:2px solid #2a5a18;border-radius:var(--radius);padding:14px;margin-bottom:10px;">
+    <div style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Dealer</div>
+    <div id="dealer-hand" style="display:flex;gap:6px;flex-wrap:wrap;min-height:72px;align-items:center;"></div>
+    <div style="margin:10px 0;border-top:1px solid #2a5a18;"></div>
+    <div style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Your Hand — <span id="bj-player-val" style="color:var(--gold);">0</span></div>
+    <div id="player-hand" style="display:flex;gap:6px;flex-wrap:wrap;min-height:72px;align-items:center;"></div>
+    <div id="bj-result" style="display:none;text-align:center;font-size:15px;font-weight:700;padding:10px;border-radius:var(--radius-sm);margin-top:10px;"></div>
+    <div style="margin-top:10px;">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Bet: <span id="bj-bet-pct-label">10%</span> of cash ($<span id="bj-bet-display">0</span>)</div>
+      <input type="range" class="bet-slider" id="bj-bet-slider" min="1" max="100" value="10" oninput="updateBJBet()">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button class="btn btn-green btn-sm" onclick="bjDeal()" id="bj-deal-btn">Deal</button>
+      <button class="btn btn-blue btn-sm" onclick="bjHit()" id="bj-hit-btn" disabled>Hit</button>
+      <button class="btn btn-gold btn-sm" onclick="bjStand()" id="bj-stand-btn" disabled>Stand</button>
+      <button class="btn btn-red btn-sm" onclick="bjDouble()" id="bj-double-btn" disabled>Double</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Blackjack Stats</div>
+    <div style="display:flex;gap:16px;font-size:13px;">
+      <span>Wins: <b id="bj-wins" style="color:var(--g3);">0</b></span>
+      <span>Losses: <b id="bj-losses" style="color:var(--red);">0</b></span>
+      <span>Pushes: <b id="bj-pushes" style="color:var(--gold);">0</b></span>
+    </div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- ROULETTE -->
+<div class="page" id="page-roulette">
+  <div class="card">
+    <div class="card-title">🎡 Roulette</div>
+    <div style="text-align:center;font-size:42px;min-height:54px;margin-bottom:4px;" id="rl-ball-display">🎯</div>
+    <div style="text-align:center;font-size:14px;color:var(--gold);font-weight:600;margin-bottom:10px;min-height:22px;" id="roulette-result-text">Pick a bet type then spin!</div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Bet: <span id="rl-pct-label">10%</span> of cash ($<span id="rl-bet-display">0</span>)</div>
+      <input type="range" class="bet-slider" id="rl-slider" min="1" max="100" value="10" oninput="updateRLBet()">
+    </div>
+    <div class="sdiv">Choose Bet Type</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <button class="btn btn-red btn-sm" onclick="setRL('red','🔴 Red',2)">🔴 Red (2x)</button>
+      <button class="btn btn-sm" style="background:#222;color:#fff;border:1px solid #555;" onclick="setRL('black','⚫ Black',2)">⚫ Black (2x)</button>
+      <button class="btn btn-green btn-sm" onclick="setRL('green','🟢 Zero',14)">🟢 Zero (14x)</button>
+      <button class="btn btn-sm" style="background:#1a1a4a;color:#aaf;" onclick="setRL('odd','Odd',2)">🔢 Odd (2x)</button>
+      <button class="btn btn-sm" style="background:#2a1a4a;color:#caf;" onclick="setRL('even','Even',2)">🔢 Even (2x)</button>
+      <button class="btn btn-gold btn-sm" onclick="setRL('dozen1','1–12',3)">1–12 (3x)</button>
+      <button class="btn btn-sm" style="background:#1a3a2a;color:#afa;" onclick="setRL('dozen2','13–24',3)">13–24 (3x)</button>
+      <button class="btn btn-sm" style="background:#2a1a3a;color:#faf;" onclick="setRL('dozen3','25–36',3)">25–36 (3x)</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Selected: <span id="rl-selected-label" style="color:var(--gold);font-weight:600;">None</span></div>
+    <button class="btn btn-gold btn-block" id="rl-spin-btn" onclick="spinRoulette()">🎡 SPIN</button>
+    <div id="rl-history" style="font-size:12px;color:var(--text3);max-height:80px;overflow-y:auto;margin-top:10px;"></div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- TOWERS -->
+<div class="page" id="page-towers">
+  <div class="card">
+    <div class="card-title">🗼 Tower Defense — Bet &amp; Survive</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Bet money, place 🌿 towers on empty cells, survive waves of 👾 enemies to multiply your bet. Cash out between waves!</div>
+    <div style="margin-bottom:8px;">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Bet: <span id="tw-pct-label">10%</span> of cash ($<span id="tw-bet-display">0</span>)</div>
+      <input type="range" class="bet-slider" id="tw-bet-slider" min="1" max="100" value="10" oninput="updateTWBet()">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <button class="btn btn-green btn-sm" id="tw-start-btn" onclick="twStart()">▶ Start Wave</button>
+      <button class="btn btn-gold btn-sm" id="tw-cashout-btn" onclick="twCashout()" disabled>💰 Cash Out</button>
+      <button class="btn btn-sm" style="background:var(--card2);color:var(--text2);border:1px solid #3a5820;" onclick="twReset()">↺ Reset</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">Tap an empty cell to place a 🌿 tower ($500 each). Towers on the path shoot enemies.</div>
+    <div id="tw-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:8px;"></div>
+    <div style="display:flex;gap:14px;font-size:13px;flex-wrap:wrap;">
+      <span>Wave: <b id="tw-wave" style="color:var(--gold);">0</b></span>
+      <span>HP: <b id="tw-hp" style="color:var(--red);">100</b>/100</span>
+      <span>Multi: <b id="tw-multi" style="color:var(--g3);">1.00x</b></span>
+      <span>Win: <b id="tw-win" style="color:var(--gold);">$0</b></span>
+    </div>
+    <div style="margin-top:8px;font-size:13px;font-weight:600;" id="tw-status"></div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- BEGGARS -->
+<div class="page" id="page-beggars">
+  <div class="card">
+    <div class="card-title">🤲 Street Beggars</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Donate to local beggars. Watch their networth grow! Your generosity is remembered.</div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Donate: <span id="beg-pct-label">5%</span> of cash ($<span id="beg-amt-display">0</span>)</div>
+      <input type="range" class="bet-slider" id="beg-slider" min="1" max="100" value="5" oninput="updateBegBet()">
+    </div>
+    <div id="beggars-list"></div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- BURN -->
+<div class="page" id="page-burn">
+  <div class="burn-card">
+    <div class="burn-fire">🔥</div>
+    <div style="text-align:center;margin-top:8px;">
+      <div style="font-size:11px;color:#ff6030;margin-bottom:4px;">Total Burned This Career</div>
+      <div class="burn-total" id="burn-total">$0</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px;" id="burn-rank-label">Rank: Cold Cash</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Burn Money</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Burn: <span id="burn-pct-label">10%</span> of cash ($<span id="burn-amt-display">0</span>)</div>
+    <input type="range" class="bet-slider" id="burn-slider" min="1" max="100" value="10" oninput="updateBurnSlider()" style="margin-bottom:10px;">
+    <button class="btn btn-red btn-block" onclick="burnMoney()">🔥 BURN IT</button>
+  </div>
+  <div class="card">
+    <div class="card-title">🔥 Burn Ranks</div>
+    <div id="burn-rank-list"></div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- RANKS -->
+<div class="page" id="page-ranks">
+  <div class="card">
+    <div class="card-title">🏆 Your Rank Progress</div>
+    <div style="text-align:center;margin-bottom:14px;">
+      <div style="font-size:28px;" id="rank-big-icon">🌱</div>
+      <div style="font-size:18px;font-weight:700;color:var(--gold);font-family:'Playfair Display',serif;" id="rank-big-name">Newcomer</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px;" id="rank-big-desc"></div>
+      <div style="margin-top:8px;">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">Progress to next rank</div>
+        <div class="prog-wrap"><div class="prog-fill" id="rank-progress-bar" style="width:0%"></div></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px;" id="rank-progress-label"></div>
+      </div>
+    </div>
+    <div id="rank-list"></div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- TRANSFER -->
+<div class="page" id="page-transfer">
+  <div class="card">
+    <div class="card-title">💸 Player Money Transfer</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px;">Send money to another player by their name. They must be a registered farmer!</div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Your name: <b style="color:var(--gold);" id="transfer-myname">—</b></div>
+      <div style="font-size:12px;color:var(--text3);">Your cash: <b style="color:var(--gold);" id="transfer-mycash">$0</b></div>
+    </div>
+    <input class="game-input" id="transfer-to" type="text" placeholder="Recipient name..." maxlength="20" style="margin-bottom:8px;">
+    <input class="game-input" id="transfer-amt" type="number" placeholder="Amount ($)" min="1" style="margin-bottom:8px;">
+    <button class="btn btn-green btn-block" onclick="sendTransfer()">💸 Send Money</button>
+  </div>
+  <div class="card">
+    <div class="card-title">📬 Recent Transfers</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Last 10 transfers on the network</div>
+    <button class="btn btn-sm" style="background:var(--card2);color:var(--text2);border:1px solid #3a5820;margin-bottom:8px;" onclick="loadTransfers()">🔄 Refresh</button>
+    <div id="transfer-log" style="font-size:12px;color:var(--text3);">Loading...</div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="page" id="page-leaderboard">
+  <div class="card">
+    <div class="card-title">🥇 Global Leaderboard</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Top farmers by total money earned. Updates every 2 minutes.</div>
+    <button class="btn btn-sm" style="background:var(--card2);color:var(--text2);border:1px solid #3a5820;margin-bottom:10px;" onclick="loadLeaderboard()">🔄 Refresh</button>
+    <div id="leaderboard-list">Loading...</div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
+</div><!-- /pages -->
+<div id="floats"></div>
+<div id="notif"></div>
+
+<script>
+// ============ RANKS ============
+const RANKS=[
+  {name:'Newcomer',icon:'🌱',req:0,desc:'Just started your farm.'},
+  {name:'Seed Boy',icon:'🌿',req:500,desc:'Got your first real harvest.'},
+  {name:'Street Dealer',icon:'🚶',req:5000,desc:'Hustling on the block.'},
+  {name:'Corner Man',icon:'🏚',req:20000,desc:'You own your corner now.'},
+  {name:'Block Runner',icon:'🏃',req:75000,desc:'Moving product fast.'},
+  {name:'Small Timer',icon:'💼',req:200000,desc:'Running a small operation.'},
+  {name:'Mid Level',icon:'🏠',req:600000,desc:'Got a real setup going.'},
+  {name:'Big Baller',icon:'💸',req:1500000,desc:'Money flows like water.'},
+  {name:'Afghan Lord',icon:'🌾',req:4000000,desc:'The farms answer to you.'},
+  {name:'Cartel Junior',icon:'🦅',req:10000000,desc:'You are untouchable.'},
+  {name:'Cartel Boss',icon:'💎',req:30000000,desc:'Run the whole territory.'},
+  {name:'Kingpin',icon:'👑',req:80000000,desc:'Everyone pays you tribute.'},
+  {name:'Don',icon:'🎩',req:200000000,desc:'The Don of the empire.'},
+  {name:'Tycoon',icon:'🏙',req:500000000,desc:'Business empire complete.'},
+  {name:'Billionaire',icon:'🛥',req:1000000000,desc:'A billion and counting.'},
+  {name:'Ghost',icon:'👻',req:3000000000,desc:'You don\'t officially exist.'},
+  {name:'Shadow King',icon:'🌑',req:8000000000,desc:'Governments fear your name.'},
+  {name:'Legend',icon:'⚡',req:20000000000,desc:'Your name echoes forever.'},
+  {name:'Afghan Myth',icon:'🌌',req:60000000000,desc:'Beyond mortal comprehension.'},
+  {name:'God of Afghan',icon:'🔱',req:200000000000,desc:'MAXIMUM RANK. You win.'},
+];
+
+// ============ DATA ============
+const FARM_UPGRADES=[
+  {id:'h1',name:'Harvest Hands',icon:'👐',desc:'+2 seeds/tap',baseCost:50,max:30,effect:'tap',val:2},
+  {id:'a1',name:'Auto Harvester',icon:'🤖',desc:'+0.5 seeds/sec',baseCost:100,max:50,effect:'sps',val:0.5},
+  {id:'h2',name:'Expert Cutters',icon:'✂️',desc:'+5 seeds/tap',baseCost:500,max:20,effect:'tap',val:5},
+  {id:'a2',name:'Grow Lights',icon:'💡',desc:'+2 seeds/sec',baseCost:1000,max:30,effect:'sps',val:2},
+  {id:'h3',name:'Premium Tools',icon:'🛠',desc:'+15 seeds/tap',baseCost:4000,max:15,effect:'tap',val:15},
+  {id:'a3',name:'Hydroponics',icon:'🧪',desc:'+10 seeds/sec',baseCost:8000,max:20,effect:'sps',val:10},
+  {id:'a4',name:'Climate Control',icon:'🌡',desc:'+30 seeds/sec',baseCost:30000,max:15,effect:'sps',val:30},
+  {id:'h4',name:'Master Grower',icon:'👨‍🌾',desc:'+50 seeds/tap',baseCost:60000,max:10,effect:'tap',val:50},
+  {id:'a5',name:'AI Farm System',icon:'🤖',desc:'+120 seeds/sec',baseCost:250000,max:10,effect:'sps',val:120},
+];
+
+const SEED_TIERS=[
+  {name:'Basic Afghan',icon:'🌿',growTime:10,yieldMul:1,sellPrice:5,cost:0},
+  {name:'Silver Haze',icon:'🌱',growTime:8,yieldMul:1.5,sellPrice:12,cost:500},
+  {name:'Purple Kush',icon:'💜',growTime:12,yieldMul:2,sellPrice:25,cost:3000},
+  {name:'OG Chem',icon:'🔬',growTime:15,yieldMul:3,sellPrice:50,cost:15000},
+  {name:'Diamond Afghan',icon:'💎',growTime:20,yieldMul:5,sellPrice:120,cost:80000},
+  {name:'Black Gold',icon:'🌑',growTime:30,yieldMul:8,sellPrice:300,cost:500000},
+];
+
+const REAL_ESTATE=[
+  {id:'shack',name:'Old Shack',icon:'🛖',baseCost:500,income:20,upgCost:300,maxLevel:5},
+  {id:'apt',name:'Studio Apt',icon:'🏠',baseCost:2000,income:80,upgCost:1000,maxLevel:8},
+  {id:'house',name:'Family House',icon:'🏡',baseCost:8000,income:250,upgCost:4000,maxLevel:8},
+  {id:'duplex',name:'Duplex',icon:'🏘',baseCost:20000,income:600,upgCost:10000,maxLevel:6},
+  {id:'condo',name:'Luxury Condo',icon:'🏢',baseCost:60000,income:1500,upgCost:30000,maxLevel:6},
+  {id:'mansion',name:'Mansion',icon:'🏰',baseCost:200000,income:5000,upgCost:100000,maxLevel:5},
+  {id:'hotel',name:'Boutique Hotel',icon:'🏨',baseCost:600000,income:15000,upgCost:300000,maxLevel:5},
+  {id:'tower',name:'Office Tower',icon:'🏙',baseCost:2000000,income:50000,upgCost:1000000,maxLevel:4},
+  {id:'island',name:'Private Island',icon:'🏝',baseCost:8000000,income:200000,upgCost:4000000,maxLevel:3},
+  {id:'yacht',name:'Yacht Harbor',icon:'🛥',baseCost:500000,income:12000,upgCost:250000,maxLevel:5},
+  {id:'casino',name:'Mini Casino',icon:'🎰',baseCost:3000000,income:80000,upgCost:1500000,maxLevel:4},
+  {id:'airstrip',name:'Private Airstrip',icon:'✈️',baseCost:10000000,income:400000,upgCost:5000000,maxLevel:3},
+];
+
+const BUSINESSES=[
+  {id:'store',name:'Corner Store',icon:'🏪',baseCost:1000,income:30,upgCost:500,maxLevel:10},
+  {id:'pharmacy',name:'Pharmacy',icon:'💊',baseCost:5000,income:120,upgCost:2500,maxLevel:8},
+  {id:'car',name:'Car Wash',icon:'🚗',baseCost:15000,income:350,upgCost:7000,maxLevel:8},
+  {id:'gym',name:'Fitness Gym',icon:'🏋',baseCost:40000,income:900,upgCost:20000,maxLevel:6},
+  {id:'club',name:'Nightclub',icon:'🎵',baseCost:100000,income:2500,upgCost:50000,maxLevel:6},
+  {id:'bank2',name:'Private Bank',icon:'🏦',baseCost:500000,income:12000,upgCost:250000,maxLevel:5},
+  {id:'lab',name:'Research Lab',icon:'🔭',baseCost:2000000,income:50000,upgCost:1000000,maxLevel:4},
+  {id:'media',name:'Media Empire',icon:'📡',baseCost:8000000,income:200000,upgCost:4000000,maxLevel:3},
+];
+
+const TRADE_ITEMS=[
+  {id:'ak',name:'AKS-74u',icon:'🔫',basePrice:5000,price:5000,owned:0,volatility:0.15},
+  {id:'akhmes',name:'Akhmes',icon:'🗡',basePrice:12000,price:12000,owned:0,volatility:0.2},
+  {id:'m18',name:'M18 Smoke',icon:'💨',basePrice:25000,price:25000,owned:0,volatility:0.18},
+  {id:'launcher',name:'Auto-Launcher',icon:'🚀',basePrice:80000,price:80000,owned:0,volatility:0.25},
+  {id:'afghan_gold',name:'Afghan Gold',icon:'🏺',basePrice:200000,price:200000,owned:0,volatility:0.3},
+];
+
+const BEGGARS=[
+  {id:'mkazem',name:'Mohammad Kazem',icon:'🧓',donated:0,msg:['God bless you','May Allah reward you','You are too kind']},
+  {id:'hwehbe',name:'Hassanen Wehbe',icon:'👴',donated:0,msg:['Shukran habibi','Ya rab yirzuqak','Allah yibarek fik']},
+  {id:'hajez',name:'Hajez Sabe3',icon:'🧔',donated:0,msg:['Walla enta tayyeb','Rabbak ma ykhassarak','Yislam ideik']},
+  {id:'bulroud',name:'Bu Lroud',icon:'👨',donated:0,msg:['Shu tayyeb enta','Yirzuqak Allah','Allah ma ykhallini nansa']},
+  {id:'alihrouk',name:'Ali Hrouk & Aboudi',icon:'👬',donated:0,msg:['Thank you boss!','W Allah you are generous','Nshallah you get richer']},
+];
+
+const BURN_RANKS=[
+  {name:'Cold Cash',req:0,icon:'🧊'},
+  {name:'Warm Wallet',req:1000,icon:'🌤'},
+  {name:'Lighter',req:10000,icon:'🔆'},
+  {name:'Matchstick',req:50000,icon:'🕯'},
+  {name:'Bonfire',req:200000,icon:'🏕'},
+  {name:'Inferno',icon:'🔥',req:1000000},
+  {name:'Volcano',icon:'🌋',req:5000000},
+  {name:'Solar Flare',icon:'☀️',req:25000000},
+  {name:'Supernova',icon:'💥',req:100000000},
+  {name:'Big Bang',icon:'🌌',req:1000000000},
+];
+
+// ============ STATE ============
+const DEF={
+  money:0,seeds:0,totalSeeds:0,totalMoney:0,
+  bankBalance:0,bankLog:[],
+  combo:1,
+  plots:[{state:'empty'},{state:'empty'},{state:'empty'}],
+  plotsBought:3,
+  autoPlants:{}, // plotIdx: bool
+  farmUpgrades:{},
+  seedTier:0,
+  realEstate:{},
+  businesses:{},
+  tradeOwned:{}, // id: qty
+  beggars:{}, // id: donated
+  burnTotal:0,
+  bjWins:0,bjLosses:0,bjPushes:0,
+  playerName:'',
+  lastSave:Date.now(),
+};
+let G={};
+
+function loadGame(){
+  try{const r=localStorage.getItem('af_v3');if(r)G=JSON.parse(r);else G=JSON.parse(JSON.stringify(DEF));}
+  catch(e){G=JSON.parse(JSON.stringify(DEF));}
+  for(const k in DEF)if(G[k]===undefined)G[k]=JSON.parse(JSON.stringify(DEF[k]));
+  // restore trade prices
+  for(const t of TRADE_ITEMS){if(G['tp_'+t.id])t.price=G['tp_'+t.id];}
+  for(const b of BEGGARS){b.donated=G.beggars[b.id]||0;}
+}
+function saveGame(){
+  G.lastSave=Date.now();
+  for(const t of TRADE_ITEMS)G['tp_'+t.id]=t.price;
+  localStorage.setItem('af_v3',JSON.stringify(G));
+}
+
+// ============ HELPERS ============
+function fmt(n){
+  if(isNaN(n)||n===undefined)return'0';
+  n=Math.floor(n);
+  if(n>=1e12)return(n/1e12).toFixed(2)+'T';
+  if(n>=1e9)return(n/1e9).toFixed(2)+'B';
+  if(n>=1e6)return(n/1e6).toFixed(2)+'M';
+  if(n>=1e3)return(n/1e3).toFixed(1)+'K';
+  return n.toLocaleString();
+}
+function fmtD(n){return'$'+fmt(n);}
+function fmtF(n){return'$'+(n||0).toFixed(2);}
+
+let notifTO;
+function notify(msg,color='var(--g2)'){
+  const el=document.getElementById('notif');
+  el.textContent=msg;el.style.background=color;
+  el.classList.add('show');
+  clearTimeout(notifTO);
+  notifTO=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// vibrate helper
+function vibe(ms=30){if(navigator.vibrate)navigator.vibrate(ms);}
+
+// ============ NAME / MODAL ============
+function setName(){
+  const n=document.getElementById('name-input').value.trim();
+  G.playerName=n||'Farmer';
+  document.getElementById('name-modal').style.display='none';
+  updateRankDisplay();
+  saveGame();
+}
+
+// ============ TABS ============
+const TAB_IDS=['farm','plots','seeds','bank','realestate','biz','trade','mines','blackjack','roulette','towers','beggars','burn','transfer','leaderboard','ranks'];
+function showTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active',TAB_IDS[i]===name);
+  });
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(name==='plots')renderPlots();
+  if(name==='seeds')renderSeeds();
+  if(name==='bank')renderBankUI();
+  if(name==='realestate')renderRE();
+  if(name==='biz')renderBiz();
+  if(name==='trade')renderTrade();
+  if(name==='beggars')renderBeggars();
+  if(name==='burn')renderBurn();
+  if(name==='ranks')renderRanks();
+  if(name==='mines')updateMinesBet();
+  if(name==='blackjack')updateBJBet();
+  if(name==='roulette'){updateRLBet();}
+  if(name==='towers'){updateTWBet();twRenderGrid();}
+  if(name==='transfer'){renderTransferTab();loadTransfers();}
+  if(name==='leaderboard')loadLeaderboard();
+}
+
+// ============ RANK ============
+function getCurrentRank(){
+  const net=G.totalMoney;
+  let rank=RANKS[0];
+  for(const r of RANKS){if(net>=r.req)rank=r;else break;}
+  return rank;
+}
+function getRankIndex(){
+  const net=G.totalMoney;
+  let idx=0;
+  for(let i=0;i<RANKS.length;i++){if(net>=RANKS[i].req)idx=i;else break;}
+  return idx;
+}
+function updateRankDisplay(){
+  const r=getCurrentRank();
+  const name=G.playerName||'Farmer';
+  document.getElementById('rank-display').textContent=r.icon+' '+name+' · '+r.name;
+}
+function renderRanks(){
+  const idx=getRankIndex();
+  const cur=RANKS[idx];
+  const next=RANKS[idx+1];
+  document.getElementById('rank-big-icon').textContent=cur.icon;
+  document.getElementById('rank-big-name').textContent=cur.name;
+  document.getElementById('rank-big-desc').textContent=cur.desc;
+  let pct=100,lbl='MAX RANK';
+  if(next){
+    pct=Math.min(100,((G.totalMoney-cur.req)/(next.req-cur.req))*100);
+    lbl=fmtD(G.totalMoney)+' / '+fmtD(next.req)+' to '+next.name;
+  }
+  document.getElementById('rank-progress-bar').style.width=pct+'%';
+  document.getElementById('rank-progress-label').textContent=lbl;
+  const el=document.getElementById('rank-list');
+  el.innerHTML='';
+  RANKS.forEach((r,i)=>{
+    const unlocked=G.totalMoney>=r.req;
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);margin-bottom:6px;background:'+(i===idx?'rgba(240,192,64,0.1)':'var(--card2)')+';border:1px solid '+(i===idx?'var(--gold2)':'#2a4018')+';opacity:'+(unlocked?1:0.45)+';';
+    div.innerHTML=`<span style="font-size:22px">${r.icon}</span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">${r.name}</div><div style="font-size:11px;color:var(--text3)">${r.desc} · ${fmtD(r.req)}</div></div>${unlocked?'<span style="font-size:12px;color:var(--g3)">✓</span>':'<span style="font-size:12px;color:var(--text3)">🔒</span>'}`;
+    el.appendChild(div);
+  });
+}
+
+// ============ FARM LOOP ============
+function getTapPower(){
+  let p=1;
+  for(const u of FARM_UPGRADES)if(u.effect==='tap')p+=u.val*(G.farmUpgrades[u.id]||0);
+  return Math.floor(p);
+}
+function getSPS(){
+  let s=0;
+  for(const u of FARM_UPGRADES)if(u.effect==='sps')s+=u.val*(G.farmUpgrades[u.id]||0);
+  return s;
+}
+function getMPS(){
+  let m=0;
+  for(const re of REAL_ESTATE){const d=G.realEstate[re.id];if(d&&d.owned)m+=re.income*Math.pow(1.5,d.level-1)/60;}
+  for(const b of BUSINESSES){const d=G.businesses[b.id];if(d&&d.owned)m+=b.income*Math.pow(1.5,d.level-1)/60;}
+  return m;
+}
+function getUpgCost(u){return Math.floor(u.baseCost*Math.pow(1.18,(G.farmUpgrades[u.id]||0)));}
+
+// TAP
+let comboTimer=null;
+function tapFarm(e){
+  vibe(20);
+  const power=Math.floor(getTapPower()*G.combo);
+  G.seeds+=power;G.totalSeeds+=power;
+  G.combo=Math.min(G.combo+0.5,10);
+  clearTimeout(comboTimer);
+  comboTimer=setTimeout(()=>{G.combo=1;updateFarmUI();},2000);
+  spawnFloat(e,'+'+fmt(power)+'🌿');
+  const btn=document.getElementById('tap-plant');
+  btn.classList.remove('pop');void btn.offsetWidth;btn.classList.add('pop');
+  updateFarmUI();
+}
+// multi-touch
+document.getElementById('tap-plant').addEventListener('touchstart',function(e){
+  e.preventDefault();
+  for(const t of e.changedTouches)tapFarm({clientX:t.clientX,clientY:t.clientY});
+},{passive:false});
+
+function spawnFloat(e,text){
+  const el=document.createElement('div');
+  el.className='float';el.textContent=text;
+  const x=(e&&e.clientX)||180,y=(e&&e.clientY)||180;
+  el.style.left=(x+(Math.random()-0.5)*30)+'px';
+  el.style.top=(y-10)+'px';
+  document.getElementById('floats').appendChild(el);
+  setTimeout(()=>el.remove(),900);
+}
+
+function updateFarmUI(){
+  const sps=getSPS(),mps=getMPS();
+  document.getElementById('tap-power').textContent='+'+fmt(getTapPower()*Math.floor(G.combo))+' seeds/tap';
+  document.getElementById('combo-label').textContent='x'+Math.floor(G.combo);
+  document.getElementById('combo-bar').style.width=((G.combo/10)*100)+'%';
+  document.getElementById('stat-sps').textContent=fmt(sps);
+  document.getElementById('stat-mps').textContent=fmtD(mps);
+  document.getElementById('stat-total-seeds').textContent=fmt(G.totalSeeds);
+  const planted=G.plots.filter(p=>p.state==='growing'||p.state==='ready').length;
+  document.getElementById('stat-plots-planted').textContent=planted+'/'+G.plots.length;
+  updateTopbar();
+  updateRankDisplay();
+  renderFarmUpgrades();
+}
+
+function renderFarmUpgrades(){
+  const el=document.getElementById('farm-upg-list');
+  if(!el)return;
+  el.innerHTML='';
+  for(const u of FARM_UPGRADES){
+    const count=G.farmUpgrades[u.id]||0;
+    const cost=getUpgCost(u);
+    const maxed=count>=u.max;
+    const canBuy=G.seeds>=cost&&!maxed;
+    const div=document.createElement('div');
+    div.className='upg-item'+(maxed?' maxed':(!canBuy?' locked':''));
+    div.innerHTML=`<div class="upg-icon">${u.icon}</div>
+      <div class="upg-info">
+        <div class="upg-name">${u.name}</div>
+        <div class="upg-desc">${u.desc}</div>
+        <div style="font-size:10px;color:var(--text3)">${count}/${u.max}</div>
+      </div>
+      ${maxed?'<span style="font-size:11px;color:var(--g3)">MAX</span>':`<div class="upg-cost">${fmt(cost)}🌿</div>`}`;
+    if(canBuy&&!maxed){
+      div.addEventListener('touchstart',function(ev){ev.preventDefault();buyFarmUpg(u.id);},{passive:false});
+      div.addEventListener('click',function(){buyFarmUpg(u.id);});
+    }
+    el.appendChild(div);
+  }
+}
+
+function buyFarmUpg(id){
+  const u=FARM_UPGRADES.find(u=>u.id===id);
+  if(!u)return;
+  const cost=getUpgCost(u);
+  if(G.seeds<cost){notify('Need '+fmt(cost)+' seeds!','#8b2020');return;}
+  G.seeds-=cost;
+  G.farmUpgrades[id]=(G.farmUpgrades[id]||0)+1;
+  vibe(40);
+  notify(u.name+' upgraded!');
+  updateFarmUI();
+}
+
+function updateTopbar(){
+  document.getElementById('topbar-money').textContent='💰 '+fmtD(G.money);
+  document.getElementById('topbar-seeds').textContent='🌿 '+fmt(G.seeds)+' seeds';
+}
+
+// ============ PLOTS ============
+function getPlotCost(){return Math.floor(500*Math.pow(2,G.plotsBought-3));}
+function getAutoPlantCost(idx){return Math.floor(100000*Math.pow(3,idx));}
+
+function buyPlot(){
+  const cost=getPlotCost();
+  if(G.seeds<cost){notify('Need '+fmt(cost)+' seeds!','#8b2020');return;}
+  G.seeds-=cost;G.plotsBought++;
+  G.plots.push({state:'empty'});
+  vibe(40);notify('New plot unlocked!');
+  renderPlots();updateTopbar();
+}
+
+function plantAll(){
+  let planted=0;
+  G.plots.forEach((p,i)=>{if(p.state==='empty'&&G.seeds>=1){G.seeds-=1;const tier=SEED_TIERS[G.seedTier];G.plots[i]={state:'growing',readyAt:Date.now()+tier.growTime*1000};planted++;}});
+  if(planted>0){notify('Planted '+planted+' plots!');vibe(30);}
+  renderPlots();updateTopbar();
+}
+
+function harvestAll(){
+  let gained=0,money=0;
+  const tier=SEED_TIERS[G.seedTier];
+  G.plots.forEach((p,i)=>{
+    if(p.state==='ready'){
+      const y=Math.floor(tier.yieldMul*10);const m=tier.sellPrice*y;
+      G.seeds+=y;G.totalSeeds+=y;G.money+=m;G.totalMoney+=m;
+      money+=m;gained+=y;G.plots[i]={state:'empty'};
+    }
+  });
+  if(gained>0){notify('Harvested! +'+fmt(gained)+' seeds, +'+fmtD(money));vibe(50);}
+  renderPlots();updateFarmUI();
+}
+
+function plantPlot(i){
+  if(G.seeds<1){notify('Need at least 1 seed!','#8b2020');return;}
+  if(G.plots[i].state!=='empty')return;
+  G.seeds-=1;
+  const tier=SEED_TIERS[G.seedTier];
+  G.plots[i]={state:'growing',readyAt:Date.now()+tier.growTime*1000};
+  vibe(20);updateTopbar();renderPlots();
+}
+
+function harvestPlot(i){
+  if(G.plots[i].state!=='ready')return;
+  const tier=SEED_TIERS[G.seedTier];
+  const earned=Math.floor(tier.yieldMul*10);const money=tier.sellPrice*earned;
+  G.seeds+=earned;G.totalSeeds+=earned;G.money+=money;G.totalMoney+=money;
+  G.plots[i]={state:'empty'};
+  vibe(40);notify('Harvested! +'+fmt(earned)+'🌿 +'+fmtD(money));
+  renderPlots();updateFarmUI();
+}
+
+function buyAutoPlant(idx){
+  const cost=getAutoPlantCost(idx);
+  if(G.money<cost){notify('Need '+fmtD(cost),'#8b2020');return;}
+  G.money-=cost;G.autoPlants[idx]=true;
+  vibe(50);notify('Auto-planter activated for Plot '+(idx+1)+'!');
+  renderPlots();updateTopbar();
+}
+
+function renderPlots(){
+  document.getElementById('plot-count').textContent=G.plots.length;
+  document.getElementById('plot-cost').textContent=fmt(getPlotCost());
+  const planted=G.plots.filter(p=>p.state==='growing').length;
+  const ready=G.plots.filter(p=>p.state==='ready').length;
+  document.getElementById('plot-planted-count').textContent=planted;
+  document.getElementById('plot-ready-count').textContent=ready;
+  const grid=document.getElementById('plots-grid');
+  grid.innerHTML='';
+  const tier=SEED_TIERS[G.seedTier];
+  const now=Date.now();
+  G.plots.forEach((plot,i)=>{
+    const div=document.createElement('div');
+    const isAuto=G.autoPlants[i];
+    let cls='plot';
+    let content='';
+    if(plot.state==='empty'){
+      content=`<div class="picon">🟫</div><div class="plabel">${isAuto?'🤖 Auto':'Tap to Plant'}</div>`;
+      if(!isAuto)div.addEventListener('touchstart',e=>{e.preventDefault();plantPlot(i);},{passive:false});
+      div.addEventListener('click',()=>plantPlot(i));
+    } else if(plot.state==='growing'){
+      cls+=' planted';
+      const left=Math.max(0,Math.ceil((plot.readyAt-now)/1000));
+      content=`<div class="picon">${tier.icon}</div><div class="ptimer">${left}s</div><div class="plabel">Growing</div>`;
+    } else if(plot.state==='ready'){
+      cls+=' ready';
+      content=`<div class="picon">✨</div><div class="ptimer">HARVEST!</div>`;
+      div.addEventListener('touchstart',e=>{e.preventDefault();harvestPlot(i);},{passive:false});
+      div.addEventListener('click',()=>harvestPlot(i));
+    }
+    if(isAuto)cls+=' auto';
+    div.className=cls;div.innerHTML=content;
+    grid.appendChild(div);
+  });
+  // auto planters list
+  const apl=document.getElementById('auto-planter-list');
+  apl.innerHTML='';
+  G.plots.forEach((p,i)=>{
+    const owned=G.autoPlants[i];
+    const cost=getAutoPlantCost(i);
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:10px;padding:10px;background:var(--card2);border-radius:var(--radius-sm);margin-bottom:8px;border:1px solid '+(owned?'var(--purple)':'#2a4018')+';';
+    div.innerHTML=`<span style="font-size:20px">🤖</span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">Auto-Planter Plot ${i+1}</div><div style="font-size:11px;color:var(--text3)">Auto-plants & harvests this plot</div></div>
+    ${owned?'<span style="font-size:12px;color:var(--purple);font-weight:600">ACTIVE</span>':`<button class="btn btn-purple btn-sm" onclick="buyAutoPlant(${i})">${fmtD(cost)}</button>`}`;
+    apl.appendChild(div);
+  });
+}
+
+// ============ SEEDS ============
+function renderSeeds(){
+  const el=document.getElementById('seed-upg-list');
+  el.innerHTML='';
+  SEED_TIERS.forEach((tier,i)=>{
+    const owned=G.seedTier>=i;
+    const isNext=i===G.seedTier+1;
+    const canBuy=isNext&&G.seeds>=tier.cost;
+    const div=document.createElement('div');
+    div.style.cssText='background:var(--card2);border:1.5px solid '+(owned?'var(--g2)':isNext?'var(--gold2)':'#2a4018')+';border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;opacity:'+(owned||isNext||i===0?1:0.45)+';';
+    div.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="font-size:26px">${tier.icon}</span>
+      <div><div style="font-size:14px;font-weight:600;color:var(--text)">${tier.name}</div></div>
+      ${owned?'<span style="margin-left:auto;font-size:12px;color:var(--g3);font-weight:600">✓ Active</span>':''}
+    </div>
+    <div style="display:flex;gap:12px;font-size:12px;color:var(--text3);margin-bottom:8px">
+      <span>⏱ ${tier.growTime}s</span><span>📦 x${tier.yieldMul}</span><span>💵 $${tier.sellPrice}/u</span>
+    </div>
+    ${!owned&&i>0?`<button class="btn btn-gold btn-sm btn-block" ${canBuy?'':'disabled'} onclick="unlockSeedTier(${i})">${isNext?'Unlock — '+fmt(tier.cost)+' seeds':'🔒 Unlock previous first'}</button>`:''}`;
+    el.appendChild(div);
+  });
+}
+function unlockSeedTier(i){
+  const tier=SEED_TIERS[i];
+  if(G.seedTier+1!==i){notify('Unlock previous strain first!','#8b2020');return;}
+  if(G.seeds<tier.cost){notify('Not enough seeds!','#8b2020');return;}
+  G.seeds-=tier.cost;G.seedTier=i;
+  vibe(60);notify('Unlocked '+tier.name+'!');
+  renderSeeds();updateTopbar();
+}
+
+// ============ BANK ============
+let bankSecs=600;
+function renderBankUI(){
+  document.getElementById('bank-balance-display').textContent=fmtF(G.bankBalance);
+  const m=Math.floor(bankSecs/60),s=bankSecs%60;
+  document.getElementById('bank-timer').textContent=m+':'+(s<10?'0':'')+s;
+  const logEl=document.getElementById('bank-log');
+  logEl.innerHTML=G.bankLog.length?G.bankLog.slice(-20).reverse().map(l=>`<div style="padding:3px 0;border-bottom:1px solid #2a4018">${l}</div>`).join(''):'No transactions yet.';
+}
+function doDeposit(){
+  const amt=parseFloat(document.getElementById('deposit-input').value);
+  if(!amt||amt<=0||G.money<amt){notify('Invalid amount!','#8b2020');return;}
+  G.money-=amt;G.bankBalance+=amt;
+  G.bankLog.push('[Deposit] +$'+amt.toFixed(2));
+  document.getElementById('deposit-input').value='';
+  vibe(30);notify('Deposited '+fmtD(amt));
+  renderBankUI();updateTopbar();
+}
+function doWithdraw(){
+  const amt=parseFloat(document.getElementById('withdraw-input').value);
+  if(!amt||amt<=0||G.bankBalance<amt){notify('Not enough in bank!','#8b2020');return;}
+  G.bankBalance-=amt;G.money+=amt;
+  G.bankLog.push('[Withdraw] -$'+amt.toFixed(2));
+  document.getElementById('withdraw-input').value='';
+  vibe(30);notify('Withdrew '+fmtD(amt));
+  renderBankUI();updateTopbar();
+}
+function quickDeposit(pct){
+  const amt=G.money*pct;
+  if(amt<=0){notify('No cash!','#8b2020');return;}
+  G.money-=amt;G.bankBalance+=amt;
+  G.bankLog.push('[Deposit '+Math.floor(pct*100)+'%] +$'+amt.toFixed(2));
+  vibe(30);notify('Deposited '+fmtD(amt));
+  renderBankUI();updateTopbar();
+}
+
+// ============ REAL ESTATE ============
+let reEarnFlash={};
+function renderRE(){
+  let totalIncome=0;
+  for(const re of REAL_ESTATE){const d=G.realEstate[re.id];if(d&&d.owned)totalIncome+=re.income*Math.pow(1.5,d.level-1);}
+  document.getElementById('re-total-income').textContent=fmtD(totalIncome)+'/min';
+  const grid=document.getElementById('re-grid');grid.innerHTML='';
+  for(const re of REAL_ESTATE){
+    const d=G.realEstate[re.id]||{owned:false,level:1};
+    const level=d.level||1;
+    const income=Math.floor(re.income*Math.pow(1.5,level-1));
+    const upgCost=Math.floor(re.upgCost*Math.pow(2,level-1));
+    const div=document.createElement('div');
+    div.className='re-card'+(d.owned?' owned':'');
+    if(reEarnFlash[re.id]){div.classList.add('earning');setTimeout(()=>div.classList.remove('earning'),600);}
+    div.innerHTML=`<div class="re-icon">${re.icon}</div>
+      <div class="re-name">${re.name}</div>
+      <div class="re-income">${fmtD(income)}/min</div>
+      ${d.owned?`<div class="re-level">Lvl ${level}/${re.maxLevel}</div>
+        ${level<re.maxLevel?`<button class="btn btn-green btn-sm" style="margin-top:4px;font-size:10px;padding:5px 8px;" onclick="upgradeRE('${re.id}')">Upg ${fmtD(upgCost)}</button>`:'<div style="font-size:10px;color:var(--g3);margin-top:4px">MAX</div>'}`
+        :`<div style="font-size:10px;color:var(--text3);margin-top:2px">${fmtD(re.baseCost)}</div><button class="btn btn-gold btn-sm" style="margin-top:4px;font-size:10px;padding:5px 8px;" onclick="buyRE('${re.id}')">Buy</button>`}`;
+    grid.appendChild(div);
+  }
+}
+function buyRE(id){
+  const re=REAL_ESTATE.find(r=>r.id===id);
+  if(G.money<re.baseCost){notify('Need '+fmtD(re.baseCost),'#8b2020');return;}
+  G.money-=re.baseCost;G.realEstate[id]={owned:true,level:1};
+  vibe(50);notify(re.name+' purchased!');renderRE();updateTopbar();
+}
+function upgradeRE(id){
+  const re=REAL_ESTATE.find(r=>r.id===id);
+  const d=G.realEstate[id];if(!d||!d.owned)return;
+  const cost=Math.floor(re.upgCost*Math.pow(2,d.level-1));
+  if(G.money<cost){notify('Need '+fmtD(cost),'#8b2020');return;}
+  if(d.level>=re.maxLevel){notify('Max level!');return;}
+  G.money-=cost;d.level++;
+  vibe(50);notify(re.name+' → Lvl '+d.level+'!');renderRE();updateTopbar();
+}
+
+// ============ BUSINESS ============
+let bizEarnFlash={};
+function renderBiz(){
+  let total=0;
+  for(const b of BUSINESSES){const d=G.businesses[b.id];if(d&&d.owned)total+=b.income*Math.pow(1.5,d.level-1);}
+  document.getElementById('biz-total-income').textContent=fmtD(total)+'/min';
+  const el=document.getElementById('biz-list');el.innerHTML='';
+  for(const b of BUSINESSES){
+    const d=G.businesses[b.id]||{owned:false,level:1};
+    const level=d.level||1;
+    const income=Math.floor(b.income*Math.pow(1.5,level-1));
+    const upgCost=Math.floor(b.upgCost*Math.pow(2,level-1));
+    const div=document.createElement('div');
+    div.className='biz-item'+(bizEarnFlash[b.id]?' earning':'');
+    div.innerHTML=`<div class="biz-icon">${b.icon}</div>
+      <div class="biz-info">
+        <div class="biz-name">${b.name}</div>
+        <div class="biz-desc">${d.owned?'Lvl '+level+'/'+b.maxLevel:'Not owned'}</div>
+        <div class="biz-income-live">${d.owned?fmtD(income)+'/min':'Base: '+fmtD(b.income)+'/min'}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+        ${d.owned?(level<b.maxLevel?`<button class="btn btn-green btn-sm" onclick="upgradeBiz('${b.id}')">Upg ${fmtD(upgCost)}</button>`:'<span style="font-size:10px;color:var(--g3)">MAX</span>'):
+        `<button class="btn btn-gold btn-sm" onclick="buyBiz('${b.id}')">${fmtD(b.baseCost)}</button>`}
+      </div>`;
+    el.appendChild(div);
+  }
+}
+function buyBiz(id){
+  const b=BUSINESSES.find(b=>b.id===id);
+  if(G.money<b.baseCost){notify('Need '+fmtD(b.baseCost),'#8b2020');return;}
+  G.money-=b.baseCost;G.businesses[id]={owned:true,level:1};
+  vibe(50);notify(b.name+' opened!');renderBiz();updateTopbar();
+}
+function upgradeBiz(id){
+  const b=BUSINESSES.find(b=>b.id===id);
+  const d=G.businesses[id];if(!d||!d.owned)return;
+  const cost=Math.floor(b.upgCost*Math.pow(2,d.level-1));
+  if(G.money<cost){notify('Need '+fmtD(cost),'#8b2020');return;}
+  if(d.level>=b.maxLevel){notify('Max level!');return;}
+  G.money-=cost;d.level++;
+  vibe(50);notify(b.name+' → Lvl '+d.level+'!');renderBiz();updateTopbar();
+}
+
+// ============ TRADE ============
+let tradeTick=0;
+function updateTradePrice(){
+  for(const t of TRADE_ITEMS){
+    const chg=(Math.random()-0.47)*t.volatility;
+    t.price=Math.max(t.basePrice*0.3,Math.min(t.basePrice*3,t.price*(1+chg)));
+  }
+}
+function renderTrade(){
+  const el=document.getElementById('trade-list');el.innerHTML='';
+  for(const t of TRADE_ITEMS){
+    const owned=G.tradeOwned[t.id]||0;
+    const pctChg=((t.price-t.basePrice)/t.basePrice)*100;
+    const up=pctChg>=0;
+    const div=document.createElement('div');
+    div.className='stock-card';
+    div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+      <div><div class="stock-name">${t.icon} ${t.name}</div><div class="stock-owned">Owned: ${owned} units</div></div>
+      <div style="text-align:right"><div class="stock-price">${fmtD(Math.floor(t.price))}</div><div class="stock-change ${up?'up':'down'}">${up?'▲':'▼'} ${Math.abs(pctChg).toFixed(1)}%</div></div>
+    </div>
+    <div class="price-bar"></div>
+    <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap">
+      <input type="number" id="tq_${t.id}" class="game-input" placeholder="Qty" min="1" style="width:70px;padding:7px 8px;font-size:12px">
+      <button class="btn btn-green btn-sm" onclick="tradeBuy('${t.id}')">Buy</button>
+      <button class="btn btn-red btn-sm" onclick="tradeSell('${t.id}')">Sell</button>
+      <span style="font-size:11px;color:var(--text3)">Cost: ${fmtD(Math.floor(t.price))}/u</span>
+    </div>`;
+    el.appendChild(div);
+  }
+}
+function tradeBuy(id){
+  const t=TRADE_ITEMS.find(t=>t.id===id);
+  const qty=parseInt(document.getElementById('tq_'+id).value)||1;
+  const cost=Math.floor(t.price)*qty;
+  if(G.money<cost){notify('Need '+fmtD(cost),'#8b2020');return;}
+  G.money-=cost;G.tradeOwned[id]=(G.tradeOwned[id]||0)+qty;
+  vibe(30);notify('Bought '+qty+'x '+t.name);renderTrade();updateTopbar();
+}
+function tradeSell(id){
+  const t=TRADE_ITEMS.find(t=>t.id===id);
+  const qty=parseInt(document.getElementById('tq_'+id).value)||1;
+  const owned=G.tradeOwned[id]||0;
+  if(owned<qty){notify('Not enough units!','#8b2020');return;}
+  const earned=Math.floor(t.price)*qty;
+  G.money+=earned;G.totalMoney+=earned;
+  G.tradeOwned[id]-=qty;
+  vibe(30);notify('Sold for '+fmtD(earned)+'!');renderTrade();updateTopbar();
+}
+
+// ============ MINES ============
+let minesState={active:false,board:[],bet:0,mineCount:0,revealed:0,multi:1};
+function updateMinesBet(){
+  const pct=parseInt(document.getElementById('mines-bet-slider').value);
+  const amt=Math.max(1,Math.floor(G.money*(pct/100)));
+  document.getElementById('mines-bet-pct-label').textContent=pct+'%';
+  document.getElementById('mines-bet-display').textContent=fmt(amt);
+}
+function startMines(){
+  const pct=parseInt(document.getElementById('mines-bet-slider').value);
+  const bet=Math.max(1,Math.floor(G.money*(pct/100)));
+  const mineCount=parseInt(document.getElementById('mines-count').value);
+  if(G.money<bet||bet<=0){notify('Not enough money!','#8b2020');return;}
+  G.money-=bet;
+  const board=[];const mines=new Set();
+  while(mines.size<mineCount)mines.add(Math.floor(Math.random()*25));
+  for(let i=0;i<25;i++)board.push({isMine:mines.has(i),revealed:false});
+  minesState={active:true,board,bet,mineCount,revealed:0,multi:1};
+  document.getElementById('mines-start-btn').disabled=true;
+  document.getElementById('mines-cashout').disabled=false;
+  document.getElementById('mines-result').style.display='none';
+  renderMinesGrid();updateTopbar();
+}
+function renderMinesGrid(){
+  const grid=document.getElementById('mines-grid');
+  grid.innerHTML='';
+  minesState.board.forEach((cell,i)=>{
+    const div=document.createElement('div');
+    div.style.cssText='height:52px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;border:1px solid #3a5820;background:var(--card2);transition:background .15s;';
+    if(cell.revealed){
+      div.style.background=cell.isMine?'#4a1010':'#1a4a10';
+      div.style.borderColor=cell.isMine?'var(--red)':'var(--g2)';
+      div.style.cursor='default';
+      div.textContent=cell.isMine?'💥':'💎';
+    } else if(minesState.active){
+      div.textContent='❓';
+      div.addEventListener('touchstart',e=>{e.preventDefault();revealMine(i);},{passive:false});
+      div.addEventListener('click',()=>revealMine(i));
+    } else {
+      div.textContent=cell.isMine?'💥':'💎';
+      div.style.cursor='default';
+    }
+    grid.appendChild(div);
+  });
+  const potential=minesState.bet*minesState.multi;
+  document.getElementById('mines-multi').textContent='Multiplier: '+minesState.multi.toFixed(2)+'x';
+  document.getElementById('mines-potential').textContent='Win: '+fmtD(potential);
+}
+function revealMine(i){
+  if(!minesState.active)return;
+  const cell=minesState.board[i];if(cell.revealed)return;
+  cell.revealed=true;vibe(25);
+  if(cell.isMine){
+    minesState.active=false;
+    document.getElementById('mines-cashout').disabled=true;
+    document.getElementById('mines-start-btn').disabled=false;
+    const res=document.getElementById('mines-result');
+    res.style.display='block';res.style.background='#4a1010';res.style.color='#f08080';
+    res.textContent='💥 BOOM! Lost '+fmtD(minesState.bet);
+    vibe([100,50,200]);notify('Mine hit! Lost '+fmtD(minesState.bet),'#8b2020');
+    renderMinesGrid();
+  } else {
+    minesState.revealed++;
+    const risk=minesState.mineCount/(25-minesState.revealed-minesState.mineCount+minesState.mineCount);
+    minesState.multi=parseFloat((minesState.multi*(1+Math.max(0.05,risk)*0.9)).toFixed(2));
+    const safeLeft=25-minesState.mineCount-minesState.revealed;
+    if(safeLeft===0){cashoutMines();return;}
+    document.getElementById('mines-result').style.display='none';
+    renderMinesGrid();
+  }
+}
+function cashoutMines(){
+  if(!minesState.active)return;
+  const win=Math.floor(minesState.bet*minesState.multi);
+  G.money+=win;G.totalMoney+=win;
+  minesState.active=false;
+  document.getElementById('mines-cashout').disabled=true;
+  document.getElementById('mines-start-btn').disabled=false;
+  const res=document.getElementById('mines-result');
+  res.style.display='block';res.style.background='#1a4a10';res.style.color='var(--g3)';
+  res.textContent='✅ Cashed out '+fmtD(win)+' ('+minesState.multi.toFixed(2)+'x)';
+  vibe([50,30,80]);notify('Won '+fmtD(win)+'!');
+  renderMinesGrid();updateTopbar();
+}
+
+// ============ BLACKJACK ============
+let bjDeck=[],bjPlayer=[],bjDealer=[],bjBet=0;
+const SUITS=['♠','♥','♦','♣'],RANKS2=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+function buildDeck(){const d=[];for(const s of SUITS)for(const r of RANKS2)d.push({s,r});return d.sort(()=>Math.random()-0.5);}
+function cardVal(r){if(['J','Q','K'].includes(r))return 10;if(r==='A')return 11;return parseInt(r);}
+function handVal(hand){let v=0,a=0;for(const c of hand){v+=cardVal(c.r);if(c.r==='A')a++;}while(v>21&&a>0){v-=10;a--;}return v;}
+function cardHTML(c,hidden=false){
+  if(hidden)return'<div style="width:44px;height:62px;background:#1a40c0;border-radius:6px;border:1px solid #2a60f0;display:inline-flex;align-items:center;justify-content:center;font-size:0;box-shadow:2px 2px 6px rgba(0,0,0,.5);flex-shrink:0"></div>';
+  const red=['♥','♦'].includes(c.s);
+  return`<div style="width:44px;height:62px;background:#fff;border-radius:6px;border:1px solid #ccc;display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:${red?'#c00':'#111'};box-shadow:2px 2px 6px rgba(0,0,0,.5);flex-shrink:0;">${c.r}${c.s}</div>`;
+}
+function updateBJBet(){
+  const pct=parseInt(document.getElementById('bj-bet-slider').value);
+  const amt=Math.max(1,Math.floor(G.money*(pct/100)));
+  document.getElementById('bj-bet-pct-label').textContent=pct+'%';
+  document.getElementById('bj-bet-display').textContent=fmt(amt);
+}
+function renderBJ(hideDealer=true){
+  document.getElementById('dealer-hand').innerHTML=bjDealer.map((c,i)=>cardHTML(c,hideDealer&&i===1)).join('');
+  document.getElementById('player-hand').innerHTML=bjPlayer.map(c=>cardHTML(c)).join('');
+  document.getElementById('bj-player-val').textContent=handVal(bjPlayer);
+  document.getElementById('bj-wins').textContent=G.bjWins;
+  document.getElementById('bj-losses').textContent=G.bjLosses;
+  document.getElementById('bj-pushes').textContent=G.bjPushes;
+}
+function bjDeal(){
+  const pct=parseInt(document.getElementById('bj-bet-slider').value);
+  const bet=Math.max(1,Math.floor(G.money*(pct/100)));
+  if(G.money<bet){notify('Not enough money!','#8b2020');return;}
+  G.money-=bet;bjBet=bet;
+  bjDeck=buildDeck();bjPlayer=[bjDeck.pop(),bjDeck.pop()];bjDealer=[bjDeck.pop(),bjDeck.pop()];
+  document.getElementById('bj-deal-btn').disabled=true;
+  document.getElementById('bj-hit-btn').disabled=false;
+  document.getElementById('bj-stand-btn').disabled=false;
+  document.getElementById('bj-double-btn').disabled=G.money<bet;
+  document.getElementById('bj-result').style.display='none';
+  renderBJ(true);updateTopbar();
+  if(handVal(bjPlayer)===21)bjStand();
+}
+function bjHit(){bjPlayer.push(bjDeck.pop());renderBJ(true);if(handVal(bjPlayer)>21)bjEnd('bust');}
+function bjStand(){while(handVal(bjDealer)<17)bjDealer.push(bjDeck.pop());bjEnd('stand');}
+function bjDouble(){
+  if(G.money<bjBet){notify('Not enough!','#8b2020');return;}
+  G.money-=bjBet;bjBet*=2;
+  bjPlayer.push(bjDeck.pop());renderBJ(true);
+  if(handVal(bjPlayer)>21)bjEnd('bust');else bjEnd('stand');
+}
+function bjEnd(type){
+  document.getElementById('bj-hit-btn').disabled=true;
+  document.getElementById('bj-stand-btn').disabled=true;
+  document.getElementById('bj-double-btn').disabled=true;
+  document.getElementById('bj-deal-btn').disabled=false;
+  renderBJ(false);
+  const pv=handVal(bjPlayer),dv=handVal(bjDealer);
+  const res=document.getElementById('bj-result');res.style.display='block';
+  if(type==='bust'||pv>21){
+    res.style.background='#4a1010';res.style.color='#f08080';
+    res.textContent='💀 Bust! Lost '+fmtD(bjBet);G.bjLosses++;vibe([100,50,200]);
+    notify('Busted! Lost '+fmtD(bjBet),'#8b2020');
+  } else if(dv>21||(pv>dv)){
+    const win=Math.floor(bjBet*(pv===21&&bjPlayer.length===2?2.5:2));
+    G.money+=win;G.totalMoney+=win;
+    res.style.background='#1a4a10';res.style.color='var(--g3)';
+    res.textContent='🎉 Win! +'+fmtD(win);G.bjWins++;vibe([50,30,80]);
+    notify('Won '+fmtD(win)+'!');
+  } else if(pv===dv){
+    G.money+=bjBet;
+    res.style.background='#2a2a10';res.style.color='var(--gold)';
+    res.textContent='🤝 Push — bet returned';G.bjPushes++;
+    notify('Push! Bet returned.');
+  } else {
+    res.style.background='#4a1010';res.style.color='#f08080';
+    res.textContent='😔 Dealer wins. Lost '+fmtD(bjBet);G.bjLosses++;vibe(200);
+    notify('Dealer wins! Lost '+fmtD(bjBet),'#8b2020');
+  }
+  updateTopbar();
+}
+
+// ============ ROULETTE (FIXED) ============
+const RL_RED=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+let rlSpinning=false,rlBetType=null,rlBetMult=1,rlBetLabel='None';
+function updateRLBet(){
+  const pct=parseInt(document.getElementById('rl-slider').value);
+  const amt=Math.max(1,Math.floor(G.money*(pct/100)));
+  document.getElementById('rl-pct-label').textContent=pct+'%';
+  document.getElementById('rl-bet-display').textContent=fmt(amt);
+}
+function setRL(type,label,mult){
+  rlBetType=type;rlBetLabel=label;rlBetMult=mult;
+  document.getElementById('rl-selected-label').textContent=label+' ('+mult+'x)';
+}
+function spinRoulette(){
+  if(rlSpinning){notify('Already spinning!');return;}
+  if(!rlBetType){notify('Pick a bet type first!','#8b2020');return;}
+  const pct=parseInt(document.getElementById('rl-slider').value);
+  const bet=Math.max(1,Math.floor(G.money*(pct/100)));
+  if(G.money<1||bet<=0){notify('Not enough money!','#8b2020');return;}
+  G.money-=bet;updateTopbar();rlSpinning=true;vibe(30);
+  document.getElementById('rl-spin-btn').disabled=true;
+  // animate
+  const icons=['🔴','⚫','🟢','🔴','⚫','🟢'];let i=0;
+  const anim=setInterval(()=>{document.getElementById('rl-ball-display').textContent=icons[i++%icons.length];},120);
+  setTimeout(()=>{
+    clearInterval(anim);rlSpinning=false;
+    document.getElementById('rl-spin-btn').disabled=false;
+    const num=Math.floor(Math.random()*37);
+    const isRed=RL_RED.includes(num),isBlack=num>0&&!isRed,isGreen=num===0;
+    const numIcon=isGreen?'🟢':isRed?'🔴':'⚫';
+    document.getElementById('rl-ball-display').textContent=numIcon+' '+num;
+    let win=0;
+    if(rlBetType==='red'&&isRed)win=bet*2;
+    else if(rlBetType==='black'&&isBlack)win=bet*2;
+    else if(rlBetType==='green'&&isGreen)win=bet*14;
+    else if(rlBetType==='odd'&&num>0&&num%2!==0)win=bet*2;
+    else if(rlBetType==='even'&&num>0&&num%2===0)win=bet*2;
+    else if(rlBetType==='dozen1'&&num>=1&&num<=12)win=bet*3;
+    else if(rlBetType==='dozen2'&&num>=13&&num<=24)win=bet*3;
+    else if(rlBetType==='dozen3'&&num>=25&&num<=36)win=bet*3;
+    const resultTxt=win>0?numIcon+' '+num+' — WIN +'+fmtD(win):numIcon+' '+num+' — Lost '+fmtD(bet);
+    if(win>0){G.money+=win;G.totalMoney+=win;vibe([50,30,80]);}else vibe(200);
+    document.getElementById('roulette-result-text').textContent=resultTxt;
+    document.getElementById('rl-history').innerHTML='<div style="padding:3px 0;border-bottom:1px solid #2a4018">'+resultTxt+'</div>'+document.getElementById('rl-history').innerHTML;
+    notify(resultTxt,win>0?'var(--g2)':'#8b2020');
+    updateTopbar();
+  },2500);
+}
+
+// ============ TOWERS ============
+// 5 rows x 6 cols. Path: row 2 across cols 0-4, base at col5 row2.
+const TW_ROWS=5,TW_COLS=6;
+const TW_PATH_CELLS=[[0,0],[1,0],[2,0],[2,1],[2,2],[2,3],[2,4]]; // path tiles
+const TW_BASE=[2,5]; // base location
+let tw={grid:[],towers:[],enemies:[],wave:0,hp:100,bet:0,multi:1,active:false,spawnQ:0,spawnTimer:0};
+
+function updateTWBet(){
+  const pct=parseInt(document.getElementById('tw-bet-slider').value);
+  const amt=Math.max(1,Math.floor(G.money*(pct/100)));
+  document.getElementById('tw-pct-label').textContent=pct+'%';
+  document.getElementById('tw-bet-display').textContent=fmt(amt);
+}
+function twInitGrid(){
+  tw.grid=[];
+  for(let r=0;r<TW_ROWS;r++){tw.grid.push([]);for(let c=0;c<TW_COLS;c++){
+    const isPath=TW_PATH_CELLS.some(([pr,pc])=>pr===r&&pc===c);
+    const isBase=r===TW_BASE[0]&&c===TW_BASE[1];
+    tw.grid[r].push(isBase?'base':isPath?'path':'empty');
+  }}
+}
+function twRenderGrid(){
+  const el=document.getElementById('tw-grid');if(!el)return;
+  el.innerHTML='';
+  for(let r=0;r<TW_ROWS;r++){for(let c=0;c<TW_COLS;c++){
+    const div=document.createElement('div');
+    div.style.cssText='height:44px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;';
+    const cell=tw.grid[r][c];
+    // check enemy on this path step
+    const pathIdx=TW_PATH_CELLS.findIndex(([pr,pc])=>pr===r&&pc===c);
+    const hasEnemy=pathIdx>=0&&tw.enemies.some(e=>Math.floor(e.pos)===pathIdx);
+    if(hasEnemy){div.textContent='👾';div.style.background='#3a0808';div.style.border='1px solid var(--red)';}
+    else if(cell==='base'){div.textContent='🏰';div.style.background='#1a1a40';div.style.border='1px solid var(--blue)';}
+    else if(cell==='path'){div.textContent='·';div.style.background='#2a1a08';div.style.color='#6a5a38';}
+    else if(cell==='tower'){div.textContent='🌿';div.style.background='#1a4010';div.style.border='1px solid var(--g2)';}
+    else{div.style.background='#0f2008';div.style.border='1px solid #1a3010';div.style.cursor='pointer';
+      div.addEventListener('click',()=>twPlaceTower(r,c));
+      div.addEventListener('touchstart',ev=>{ev.preventDefault();twPlaceTower(r,c);},{passive:false});}
+    el.appendChild(div);
+  }}
+  document.getElementById('tw-wave').textContent=tw.wave;
+  document.getElementById('tw-hp').textContent=tw.hp;
+  document.getElementById('tw-multi').textContent=tw.multi.toFixed(2)+'x';
+  document.getElementById('tw-win').textContent=fmtD(Math.floor(tw.bet*tw.multi));
+}
+function twPlaceTower(r,c){
+  if(tw.active){notify('Cannot place during wave!','#8b2020');return;}
+  if(tw.grid[r][c]!=='empty'){notify('Cannot place here!','#8b2020');return;}
+  if(G.money<500){notify('Need $500 for a tower!','#8b2020');return;}
+  G.money-=500;tw.grid[r][c]='tower';
+  tw.towers.push({r,c,cd:0});vibe(25);notify('Tower placed!');twRenderGrid();updateTopbar();
+}
+function twStart(){
+  if(tw.active){notify('Wave already running!');return;}
+  if(tw.wave===0){// first wave — place bet
+    const pct=parseInt(document.getElementById('tw-bet-slider').value);
+    const bet=Math.max(1,Math.floor(G.money*(pct/100)));
+    if(G.money<bet||bet<=0){notify('Not enough money!','#8b2020');return;}
+    G.money-=bet;tw.bet=bet;updateTopbar();
+  }
+  if(tw.towers.length===0){notify('Place at least 1 tower!','#8b2020');return;}
+  tw.wave++;tw.active=true;tw.spawnQ=3+tw.wave*2;tw.spawnTimer=0;
+  document.getElementById('tw-start-btn').disabled=true;
+  document.getElementById('tw-cashout-btn').disabled=false;
+  document.getElementById('tw-status').textContent='Wave '+tw.wave+' incoming!';
+  notify('Wave '+tw.wave+' started!');
+}
+function twCashout(){
+  const win=Math.floor(tw.bet*tw.multi);
+  G.money+=win;G.totalMoney+=win;
+  notify('Cashed out '+fmtD(win)+'! ('+tw.multi.toFixed(2)+'x)','var(--gold2)');
+  vibe([50,30,80]);twReset();updateTopbar();
+}
+function twReset(){
+  tw={grid:[],towers:[],enemies:[],wave:0,hp:100,bet:0,multi:1,active:false,spawnQ:0,spawnTimer:0};
+  twInitGrid();
+  document.getElementById('tw-start-btn').disabled=false;
+  document.getElementById('tw-cashout-btn').disabled=true;
+  document.getElementById('tw-status').textContent='';
+  twRenderGrid();
+}
+// called in main loop every 100ms
+let twAcc=0;
+function twTick(dt){
+  if(!tw.active)return;
+  twAcc+=dt;if(twAcc<0.3)return;twAcc=0;
+  // spawn
+  if(tw.spawnQ>0){tw.spawnTimer++;if(tw.spawnTimer%3===0){tw.enemies.push({pos:0,hp:15+tw.wave*12,maxHp:15+tw.wave*12});tw.spawnQ--;}}
+  // move enemies
+  for(let i=tw.enemies.length-1;i>=0;i--){
+    const e=tw.enemies[i];e.pos+=0.4;
+    if(e.pos>=TW_PATH_CELLS.length){// reached base
+      tw.hp=Math.max(0,tw.hp-20);tw.enemies.splice(i,1);
+      if(tw.hp<=0){twLose();return;}
+    }
+  }
+  // towers shoot
+  for(const t of tw.towers){
+    if(t.cd>0){t.cd--;continue;}
+    const pathIdx=TW_PATH_CELLS.findIndex(([pr,pc])=>Math.abs(pr-t.r)<=1&&Math.abs(pc-t.c)<=1);
+    const target=tw.enemies.find(e=>Math.abs(Math.floor(e.pos)-TW_PATH_CELLS.findIndex(([pr,pc])=>Math.abs(pr-t.r)<=1&&Math.abs(pc-t.c)<=1))<=1);
+    // simpler: find any enemy within 1 path step of a path cell adjacent to tower
+    const nearby=tw.enemies.find(e=>{
+      const ep=TW_PATH_CELLS[Math.floor(e.pos)];if(!ep)return false;
+      return Math.abs(ep[0]-t.r)<=1&&Math.abs(ep[1]-t.c)<=1;
+    });
+    if(nearby){nearby.hp-=10+tw.wave*2;t.cd=2;if(nearby.hp<=0)tw.enemies=tw.enemies.filter(en=>en!==nearby);}
+  }
+  // wave cleared?
+  if(tw.spawnQ===0&&tw.enemies.length===0){twWaveWon();}
+  if(document.getElementById('page-towers').classList.contains('active'))twRenderGrid();
+}
+function twWaveWon(){
+  tw.active=false;tw.multi=parseFloat((tw.multi+(0.3+tw.wave*0.1)).toFixed(2));
+  document.getElementById('tw-start-btn').disabled=false;
+  document.getElementById('tw-status').textContent='✅ Wave '+tw.wave+' cleared! Multi: '+tw.multi.toFixed(2)+'x — Cash out or keep going!';
+  notify('Wave '+tw.wave+' cleared! '+tw.multi.toFixed(2)+'x');vibe([50,30,80]);twRenderGrid();
+}
+function twLose(){
+  tw.active=false;
+  document.getElementById('tw-status').textContent='💀 Base destroyed! Lost '+fmtD(tw.bet);
+  document.getElementById('tw-cashout-btn').disabled=true;
+  notify('Base destroyed! Lost '+fmtD(tw.bet),'#8b2020');vibe([200,100,300]);
+  setTimeout(twReset,2500);
+}
+
+// ============ BEGGARS ============
+function updateBegBet(){
+  const pct=parseInt(document.getElementById('beg-slider').value);
+  const amt=Math.max(1,Math.floor(G.money*(pct/100)));
+  document.getElementById('beg-pct-label').textContent=pct+'%';
+  document.getElementById('beg-amt-display').textContent=fmt(amt);
+}
+function donate(id){
+  const b=BEGGARS.find(b=>b.id===id);
+  const pct=parseInt(document.getElementById('beg-slider').value);
+  const amt=Math.max(1,Math.floor(G.money*(pct/100)));
+  if(G.money<amt){notify('Not enough money!','#8b2020');return;}
+  G.money-=amt;b.donated+=amt;G.beggars[id]=(G.beggars[id]||0)+amt;
+  vibe(30);notify('"'+b.msg[Math.floor(Math.random()*b.msg.length)]+'" —'+b.name);
+  renderBeggars();updateTopbar();
+}
+function renderBeggars(){
+  updateBegBet();
+  const el=document.getElementById('beggars-list');el.innerHTML='';
+  for(const b of BEGGARS){
+    const donated=G.beggars[b.id]||0;
+    const level=donated<1000?'Homeless':donated<10000?'Street Vendor':donated<100000?'Small Shop Owner':donated<1000000?'Businessman':'Wealthy Man';
+    const div=document.createElement('div');
+    div.className='beggar-card';
+    div.innerHTML=`<div class="beggar-avatar">${b.icon}</div>
+      <div class="beggar-info">
+        <div class="beggar-name">${b.name}</div>
+        <div class="beggar-nw">Net Worth: ${fmtD(donated)} — ${level}</div>
+        <div class="beggar-msg">"${b.msg[Math.floor(Math.random()*b.msg.length)]}"</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">Total donated: ${fmtD(donated)}</div>
+      </div>
+      <button class="btn btn-green btn-sm" onclick="donate('${b.id}')">Give</button>`;
+    el.appendChild(div);
+  }
+}
+
+// ============ BURN ============
+function updateBurnSlider(){
+  const pct=parseInt(document.getElementById('burn-slider').value);
+  const amt=Math.max(1,Math.floor(G.money*(pct/100)));
+  document.getElementById('burn-pct-label').textContent=pct+'%';
+  document.getElementById('burn-amt-display').textContent=fmt(amt);
+}
+function burnMoney(){
+  const pct=parseInt(document.getElementById('burn-slider').value);
+  const amt=Math.max(1,Math.floor(G.money*(pct/100)));
+  if(G.money<amt||amt<=0){notify('Not enough money!','#8b2020');return;}
+  G.money-=amt;G.burnTotal=(G.burnTotal||0)+amt;
+  vibe([50,50,200]);notify('🔥 Burned '+fmtD(amt)+'! FLEX!','#c04020');
+  renderBurn();updateTopbar();
+}
+function renderBurn(){
+  updateBurnSlider();
+  document.getElementById('burn-total').textContent=fmtD(G.burnTotal||0);
+  const br=BURN_RANKS.slice().reverse().find(r=>(G.burnTotal||0)>=r.req)||BURN_RANKS[0];
+  document.getElementById('burn-rank-label').textContent='Rank: '+br.icon+' '+br.name;
+  const el=document.getElementById('burn-rank-list');el.innerHTML='';
+  for(const r of BURN_RANKS){
+    const unlocked=(G.burnTotal||0)>=r.req;
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:6px;background:var(--card2);border:1px solid '+(unlocked?'#8b3020':'#2a4018')+';opacity:'+(unlocked?1:0.5)+';';
+    div.innerHTML=`<span style="font-size:20px">${r.icon}</span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">${r.name}</div><div style="font-size:11px;color:var(--text3)">Burn ${fmtD(r.req)}</div></div>${unlocked?'<span style="color:#ff6030;font-size:12px;">🔥</span>':''}`;
+    el.appendChild(div);
+  }
+}
+
+// ============ GAME LOOP ============
+let bankSecs2=600;
+let tickCount=0;
+let lastTick=Date.now();
+
+setInterval(()=>{
+  const now=Date.now();
+  const dt=Math.min((now-lastTick)/1000,0.2);
+  lastTick=now;
+  tickCount++;
+
+  // passive seeds
+  const sps=getSPS();
+  if(sps>0){const gain=sps*dt;G.seeds+=gain;G.totalSeeds+=gain;}
+
+  // passive money from RE & biz
+  const mps=getMPS();
+  if(mps>0){const gain=mps*dt;G.money+=gain;G.totalMoney+=gain;}
+
+  // auto planters
+  const tierNow=SEED_TIERS[G.seedTier];
+  G.plots.forEach((p,i)=>{
+    if(G.autoPlants[i]){
+      if(p.state==='empty'&&G.seeds>=1){G.seeds-=1;G.plots[i]={state:'growing',readyAt:Date.now()+tierNow.growTime*1000};}
+      else if(p.state==='ready'){
+        const y=Math.floor(tierNow.yieldMul*10);const m=tierNow.sellPrice*y;
+        G.seeds+=y;G.totalSeeds+=y;G.money+=m;G.totalMoney+=m;
+        G.plots[i]={state:'empty'};
+      }
+    }
+    if(p.state==='growing'&&now>=p.readyAt)G.plots[i].state='ready';
+  });
+
+  // bank interest every 10 min
+  bankSecs2--;
+  if(bankSecs2<=0){
+    bankSecs2=600;
+    if(G.bankBalance>0){
+      const interest=G.bankBalance*0.04;
+      G.bankBalance+=interest;G.totalMoney+=interest;
+      G.bankLog.push('[Interest +4%] +$'+interest.toFixed(2));
+      notify('💰 Bank interest +'+fmtD(interest),'var(--gold2)');
+    }
+  }
+
+  // trade price update every 15s
+  if(tickCount%150===0){
+    updateTradePrice();
+    if(document.getElementById('page-trade').classList.contains('active'))renderTrade();
+  }
+
+  // RE earn flash every 5s
+  if(tickCount%50===0){
+    for(const re of REAL_ESTATE){const d=G.realEstate[re.id];if(d&&d.owned)reEarnFlash[re.id]=true;}
+    for(const b of BUSINESSES){const d=G.businesses[b.id];if(d&&d.owned)bizEarnFlash[b.id]=true;}
+    setTimeout(()=>{reEarnFlash={};bizEarnFlash={};},600);
+    if(document.getElementById('page-realestate').classList.contains('active'))renderRE();
+    if(document.getElementById('page-biz').classList.contains('active'))renderBiz();
+  }
+
+  // bank timer display
+  if(document.getElementById('page-bank').classList.contains('active')){
+    const m=Math.floor(bankSecs2/60),s=bankSecs2%60;
+    const timerEl=document.getElementById('bank-timer');
+    if(timerEl)timerEl.textContent=m+':'+(s<10?'0':'')+s;
+    const bEl=document.getElementById('bank-balance-display');
+    if(bEl)bEl.textContent=fmtF(G.bankBalance);
+  }
+
+  // plots update
+  if(document.getElementById('page-plots').classList.contains('active'))renderPlots();
+
+  // towers tick
+  twTick(0.1);
+
+  // main UI update
+  updateFarmUI();
+  updateRankDisplay();
+
+  // save every 5s
+  if(tickCount%50===0)saveGame();
+
+},100);
+
+// ============ OFFLINE EARNINGS ============
+function applyOffline(){
+  const elapsed=Math.min((Date.now()-G.lastSave)/1000,7200);
+  if(elapsed>10){
+    const sps=getSPS(),mps=getMPS();
+    const s=Math.floor(sps*elapsed),m=mps*elapsed;
+    if(s>0){G.seeds+=s;G.totalSeeds+=s;}
+    if(m>0){G.money+=m;G.totalMoney+=m;}
+    if(s>0||m>0)setTimeout(()=>notify('Welcome back! +'+fmt(s)+'🌿 +'+fmtD(m)+' offline','var(--gold2)'),800);
+  }
+}
+
+// ============ SUPABASE TRANSFER ============
+const _sb = supabase.createClient(
+  'https://plouncqoohiaerprbpwp.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsb3VuY3Fvb2hpYWVycHJicHdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTU0NjQsImV4cCI6MjA5MzQ5MTQ2NH0.1pG-JtQek56E98vx0d6-kCqoKww07Ui6NiyqWVQlqJY'
+);
+
+function renderTransferTab(){
+  document.getElementById('transfer-myname').textContent = G.playerName||'(set your name)';
+  document.getElementById('transfer-mycash').textContent = fmtD(G.money);
+}
+
+async function sendTransfer(){
+  const to = document.getElementById('transfer-to').value.trim();
+  const amt = parseFloat(document.getElementById('transfer-amt').value);
+  const from = G.playerName||'';
+  if(!from){notify('Set your name first!','#8b2020');return;}
+  if(!to||to===from){notify('Invalid recipient!','#8b2020');return;}
+  if(!amt||amt<=0||G.money<amt){notify('Not enough money!','#8b2020');return;}
+  G.money -= amt;
+  updateTopbar();
+  const {error} = await _sb.from('transfers').insert({from_name:from, to_name:to, amount:amt});
+  if(error){
+    G.money += amt; // refund
+    updateTopbar();
+    notify('Transfer failed: '+error.message,'#8b2020');
+    return;
+  }
+  document.getElementById('transfer-amt').value='';
+  document.getElementById('transfer-to').value='';
+  notify('Sent '+fmtD(amt)+' to '+to+'!');
+  vibe(50);
+  renderTransferTab();
+  loadTransfers();
+  saveGame();
+}
+
+async function loadTransfers(){
+  const logEl = document.getElementById('transfer-log');
+  logEl.textContent = 'Loading...';
+  const {data, error} = await _sb
+    .from('transfers')
+    .select('from_name,to_name,amount,created_at')
+    .order('created_at',{ascending:false})
+    .limit(10);
+  if(error){logEl.textContent='Could not load transfers.';return;}
+  if(!data||data.length===0){logEl.textContent='No transfers yet.';return;}
+  const myName = G.playerName||'';
+  logEl.innerHTML = data.map(t=>{
+    const isMe = t.to_name===myName;
+    const time = new Date(t.created_at).toLocaleTimeString();
+    const color = isMe?'var(--g3)':'var(--text3)';
+    return `<div style="padding:5px 0;border-bottom:1px solid #2a4018;color:${color}">
+      ${isMe?'📬':'📤'} <b>${t.from_name}</b> → <b>${t.to_name}</b>: ${fmtD(t.amount)} <span style="font-size:10px;opacity:0.6">${time}</span>
+    </div>`;
+  }).join('');
+  // credit received money
+  if(myName){
+    const received = data.filter(t=>t.to_name===myName&&!t._credited);
+    // Note: crediting happens server-side ideally; here we just display
+  }
+}
+
+// Check for incoming transfers every 60s (minimal DB reads)
+let transferCheckTick=0;
+async function checkIncoming(){
+  if(!G.playerName)return;
+  const since = G.lastTransferCheck || '2000-01-01T00:00:00.000Z';
+  G.lastTransferCheck = new Date().toISOString();
+  saveGame();
+  const {data} = await _sb.from('transfers').select('amount,from_name,created_at').eq('to_name',G.playerName).gt('created_at',since).limit(20);
+  if(data&&data.length>0){
+    let total=0;data.forEach(t=>total+=parseFloat(t.amount));
+    G.money+=total;G.totalMoney+=total;
+    notify('💸 Received '+fmtD(total)+' from '+data.map(t=>t.from_name).join(', ')+'!','var(--gold2)');
+    vibe([50,30,80]);updateTopbar();saveGame();
+  }
+}
+
+// ============ LEADERBOARD ============
+const MEDALS=['🥇','🥈','🥉'];
+async function syncLeaderboard(){
+  if(!G.playerName)return;
+  await _sb.from('leaderboard').upsert({name:G.playerName,total_money:Math.floor(G.totalMoney),updated_at:new Date().toISOString()},{onConflict:'name'});
+}
+async function loadLeaderboard(){
+  const el=document.getElementById('leaderboard-list');
+  if(!el)return;
+  el.textContent='Loading...';
+  const {data,error}=await _sb.from('leaderboard').select('name,total_money').order('total_money',{ascending:false}).limit(20);
+  if(error||!data){el.textContent='Could not load.';return;}
+  if(data.length===0){el.textContent='No players yet!';return;}
+  const myName=G.playerName||'';
+  el.innerHTML=data.map((p,i)=>{
+    const medal=MEDALS[i]||(i+1)+'.';
+    const isMe=p.name===myName;
+    const rank=RANKS.slice().reverse().find(r=>p.total_money>=r.req)||RANKS[0];
+    return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #2a4018;background:${isMe?'rgba(240,192,64,0.07)':'transparent'};border-radius:4px;padding:8px;">
+      <span style="font-size:18px;min-width:28px;text-align:center;">${medal}</span>
+      <span style="font-size:16px;">${rank.icon}</span>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;color:${isMe?'var(--gold)':'var(--text)'};">${p.name}${isMe?' (you)':''}</div>
+        <div style="font-size:11px;color:var(--text3);">${rank.name}</div>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--gold);">${fmtD(p.total_money)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============ BOOT ============
+loadGame();
+if(G.playerName){document.getElementById('name-modal').style.display='none';}
+applyOffline();
+twInitGrid();
+updateFarmUI();
+renderFarmUpgrades();
+updateRankDisplay();
+updateBurnSlider();
+// Check incoming transfers every 60s only
+checkIncoming();
+setInterval(checkIncoming, 60000);
+syncLeaderboard();
+setInterval(syncLeaderboard, 120000);
+</script>
+</body>
+</html>
