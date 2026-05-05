@@ -1773,6 +1773,7 @@ async function sendTransfer(){
   document.getElementById('transfer-to').value='';
   notify('Sent '+fmtD(amt)+' to '+to+'!');
   vibe(50);
+  syncLeaderboard();
   renderTransferTab();
   loadTransfers();
   saveGame();
@@ -1861,7 +1862,7 @@ updateRankDisplay();
 updateBurnSlider();
 // Check incoming transfers every 60s only
 checkIncoming();
-setInterval(checkIncoming, 60000);
+setInterval(checkIncoming, 5000);
 syncLeaderboard();
 setInterval(syncLeaderboard, 120000);
 syncBurnLeaderboard();
