@@ -771,6 +771,7 @@ async function loadFromCloud(name){
   const {data,error}=await _sb.from('players').select('game_data').eq('name',name).single();
   if(data&&data.game_data){
     G=data.game_data;
+    G.playerName=name; // always preserve the name
     for(const k in DEF)if(G[k]===undefined)G[k]=JSON.parse(JSON.stringify(DEF[k]));
     for(const t of TRADE_ITEMS){if(G['tp_'+t.id])t.price=G['tp_'+t.id];}
     for(const b of BEGGARS){b.donated=G.beggars[b.id]||0;}
@@ -808,13 +809,14 @@ function vibe(ms=30){if(navigator.vibrate)navigator.vibrate(ms);}
 // ============ NAME / MODAL ============
 async function setName(){
   const n=document.getElementById('name-input').value.trim();
-  G.playerName=n||'Farmer';
+  if(!n){notify('Enter your name!','#8b2020');return;}
+  G.playerName=n;
   document.getElementById('name-modal').style.display='none';
   notify('Loading your data...','var(--gold2)');
   const found=await loadFromCloud(G.playerName);
   if(found){notify('Welcome back '+G.playerName+'!','var(--g2)');}
   else{notify('New farmer created!','var(--g2)');}
-  updateRankDisplay();updateFarmUI();
+  updateRankDisplay();updateFarmUI();renderFarmUpgrades();
   saveGame();saveToCloud();
 }
 
