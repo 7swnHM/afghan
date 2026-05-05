@@ -209,6 +209,7 @@ body{display:flex;flex-direction:column;max-width:100vw;}
     <div class="seeds" id="topbar-seeds">🌿 0 seeds</div>
   </div>
   <div id="rank-display">👤 Newcomer</div>
+  <div onclick="showTab('chat')" style="cursor:pointer;font-size:20px;padding:4px 8px;">💬</div>
   <div style="text-align:right">
     <div class="brand">AFGHAN FARM</div>
     <div style="font-size:9px;color:var(--text3);letter-spacing:1px;">Made by SLD</div>
@@ -226,10 +227,11 @@ body{display:flex;flex-direction:column;max-width:100vw;}
   <div class="tab" onclick="showTab('mines')"><span class="ticon">💣</span>Mines</div>
   <div class="tab" onclick="showTab('blackjack')"><span class="ticon">🃏</span>Blackjack</div>
   <div class="tab" onclick="showTab('roulette')"><span class="ticon">🎡</span>Roulette</div>
-  <div class="tab" onclick="showTab('towers')"><span class="ticon">🗼</span>Towers</div>
+  <div class="tab" onclick="showTab('towers')"><span class="ticon">🐔</span>Chicken</div>
   <div class="tab" onclick="showTab('beggars')"><span class="ticon">🤲</span>Beggars</div>
   <div class="tab" onclick="showTab('burn')"><span class="ticon">🔥</span>Burn</div>
   <div class="tab" onclick="showTab('transfer')"><span class="ticon">💸</span>Transfer</div>
+  <div class="tab" onclick="showTab('chat')"><span class="ticon">💬</span>Chat</div>
   <div class="tab" onclick="showTab('leaderboard')"><span class="ticon">🥇</span>Top</div>
   <div class="tab" onclick="showTab('ranks')"><span class="ticon">🏆</span>Ranks</div>
 </div>
@@ -315,7 +317,13 @@ body{display:flex;flex-direction:column;max-width:100vw;}
   </div>
   <div class="card">
     <div class="card-title">Withdraw</div>
-    <div class="input-row">
+    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+      <button class="btn btn-sm btn-gold" onclick="quickWithdraw(0.1)">10%</button>
+      <button class="btn btn-sm btn-gold" onclick="quickWithdraw(0.25)">25%</button>
+      <button class="btn btn-sm btn-gold" onclick="quickWithdraw(0.5)">50%</button>
+      <button class="btn btn-sm btn-gold" onclick="quickWithdraw(1)">All Out</button>
+    </div>
+    <div style="display:flex;gap:8px;">
       <input class="game-input" type="number" id="withdraw-input" placeholder="Amount ($)" min="1">
       <button class="btn btn-gold" onclick="doWithdraw()">Withdraw</button>
     </div>
@@ -446,25 +454,27 @@ body{display:flex;flex-direction:column;max-width:100vw;}
   <div class="footer-brand">Made by SLD</div>
 </div>
 
-<!-- TOWERS -->
+<!-- CHICKEN CROSS -->
 <div class="page" id="page-towers">
   <div class="card">
-    <div class="card-title">🗼 Tower Defense — Bet &amp; Survive</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Bet money, place 🌿 towers on empty cells, survive waves of 👾 enemies to multiply your bet. Cash out between waves!</div>
+    <div class="card-title">🐔 Chicken Cross</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Cross lanes to multiply your bet. Cash out before getting hit! Each safe cross = bigger multiplier.</div>
     <div style="margin-bottom:8px;">
       <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Bet: <span id="tw-pct-label">10%</span> of cash ($<span id="tw-bet-display">0</span>)</div>
       <input type="range" class="bet-slider" id="tw-bet-slider" min="1" max="100" value="10" oninput="updateTWBet()">
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-      <button class="btn btn-green btn-sm" id="tw-start-btn" onclick="twStart()">▶ Start Wave</button>
-      <button class="btn btn-gold btn-sm" id="tw-cashout-btn" onclick="twCashout()" disabled>💰 Cash Out</button>
-      <button class="btn btn-sm" style="background:var(--card2);color:var(--text2);border:1px solid #3a5820;" onclick="twReset()">↺ Reset</button>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+      <button class="btn btn-green btn-sm" id="tw-start-btn" onclick="ccStart()">▶ Start</button>
+      <button class="btn btn-gold btn-sm" id="tw-cashout-btn" onclick="ccCashout()" disabled>💰 Cash Out</button>
+      <button class="btn btn-sm" style="background:var(--card2);color:var(--text2);border:1px solid #3a5820;" onclick="ccReset()">↺ Reset</button>
     </div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">Tap an empty cell to place a 🌿 tower ($500 each). Towers on the path shoot enemies.</div>
-    <div id="tw-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:8px;"></div>
+    <!-- Road -->
+    <div id="cc-road" style="background:#1a1a1a;border-radius:var(--radius);padding:8px;margin-bottom:10px;position:relative;overflow:hidden;min-height:320px;">
+      <!-- Lane labels -->
+      <div id="cc-lanes" style="display:flex;flex-direction:column;gap:4px;"></div>
+    </div>
     <div style="display:flex;gap:14px;font-size:13px;flex-wrap:wrap;">
-      <span>Wave: <b id="tw-wave" style="color:var(--gold);">0</b></span>
-      <span>HP: <b id="tw-hp" style="color:var(--red);">100</b>/100</span>
+      <span>Lane: <b id="tw-wave" style="color:var(--gold);">0</b>/8</span>
       <span>Multi: <b id="tw-multi" style="color:var(--g3);">1.00x</b></span>
       <span>Win: <b id="tw-win" style="color:var(--gold);">$0</b></span>
     </div>
@@ -552,6 +562,19 @@ body{display:flex;flex-direction:column;max-width:100vw;}
   <div class="footer-brand">Made by SLD</div>
 </div>
 
+<!-- CHAT -->
+<div class="page" id="page-chat">
+  <div class="card">
+    <div class="card-title">💬 Global Chat</div>
+    <div id="chat-messages" style="height:320px;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:6px;"></div>
+    <div style="display:flex;gap:8px;">
+      <input class="game-input" id="chat-input" type="text" placeholder="Type a message..." maxlength="100" onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="btn btn-green btn-sm" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+  <div class="footer-brand">Made by SLD</div>
+</div>
+
 <!-- LEADERBOARD -->
 <div class="page" id="page-leaderboard">
   <div class="card">
@@ -607,11 +630,15 @@ const FARM_UPGRADES=[
 
 const SEED_TIERS=[
   {name:'Basic Afghan',icon:'🌿',growTime:10,yieldMul:1,sellPrice:5,cost:0},
-  {name:'Silver Haze',icon:'🌱',growTime:8,yieldMul:1.5,sellPrice:12,cost:500},
-  {name:'Purple Kush',icon:'💜',growTime:12,yieldMul:2,sellPrice:25,cost:3000},
-  {name:'OG Chem',icon:'🔬',growTime:15,yieldMul:3,sellPrice:50,cost:15000},
-  {name:'Diamond Afghan',icon:'💎',growTime:20,yieldMul:5,sellPrice:120,cost:80000},
-  {name:'Black Gold',icon:'🌑',growTime:30,yieldMul:8,sellPrice:300,cost:500000},
+  {name:'Silver Haze',icon:'🌱',growTime:12,yieldMul:1.5,sellPrice:10,cost:300},
+  {name:'Purple Kush',icon:'💜',growTime:15,yieldMul:2,sellPrice:20,cost:1500},
+  {name:'OG Chem',icon:'🔬',growTime:18,yieldMul:3,sellPrice:40,cost:8000},
+  {name:'Lemon Skunk',icon:'🍋',growTime:20,yieldMul:4,sellPrice:70,cost:30000},
+  {name:'Diamond Afghan',icon:'💎',growTime:25,yieldMul:5,sellPrice:110,cost:100000},
+  {name:'White Widow',icon:'🕷',growTime:30,yieldMul:6.5,sellPrice:180,cost:400000},
+  {name:'Black Gold',icon:'🌑',growTime:40,yieldMul:8,sellPrice:280,cost:1500000},
+  {name:'Crystal Storm',icon:'❄️',growTime:55,yieldMul:11,sellPrice:450,cost:6000000},
+  {name:'Afghan Legend',icon:'🔱',growTime:75,yieldMul:15,sellPrice:800,cost:25000000},
 ];
 
 const REAL_ESTATE=[
@@ -739,7 +766,7 @@ function setName(){
 }
 
 // ============ TABS ============
-const TAB_IDS=['farm','plots','seeds','bank','realestate','biz','trade','mines','blackjack','roulette','towers','beggars','burn','transfer','leaderboard','ranks'];
+const TAB_IDS=['farm','plots','seeds','bank','realestate','biz','trade','mines','blackjack','roulette','towers','beggars','burn','transfer','chat','leaderboard','ranks'];
 function showTab(name){
   document.querySelectorAll('.tab').forEach((t,i)=>{
     t.classList.toggle('active',TAB_IDS[i]===name);
@@ -758,8 +785,9 @@ function showTab(name){
   if(name==='mines')updateMinesBet();
   if(name==='blackjack')updateBJBet();
   if(name==='roulette'){updateRLBet();}
-  if(name==='towers'){updateTWBet();twRenderGrid();}
+  if(name==='towers'){updateTWBet();ccRenderRoad();}
   if(name==='transfer'){renderTransferTab();loadTransfers();}
+  if(name==='chat')initChat();
   if(name==='leaderboard')loadLeaderboard();
 }
 
@@ -914,7 +942,7 @@ function updateTopbar(){
 }
 
 // ============ PLOTS ============
-function getPlotCost(){return Math.floor(500*Math.pow(2,G.plotsBought-3));}
+function getPlotCost(){return Math.floor(100*Math.pow(1.6,G.plotsBought-3));}
 function getAutoPlantCost(idx){return Math.floor(100000*Math.pow(3,idx));}
 
 function buyPlot(){
@@ -1079,6 +1107,11 @@ function doWithdraw(){
   document.getElementById('withdraw-input').value='';
   vibe(30);notify('Withdrew '+fmtD(amt));
   renderBankUI();updateTopbar();
+}
+function quickWithdraw(pct){
+  const amt=G.bankBalance*pct;if(amt<=0){notify('Nothing to withdraw!','#8b2020');return;}
+  G.bankBalance-=amt;G.money+=amt;G.bankLog.push('[Withdraw '+Math.floor(pct*100)+'%] -$'+amt.toFixed(2));
+  vibe(30);notify('Withdrew '+fmtD(amt));renderBankUI();updateTopbar();
 }
 function quickDeposit(pct){
   const amt=G.money*pct;
@@ -1433,9 +1466,96 @@ function spinRoulette(){
   },2500);
 }
 
-// ============ TOWERS ============
-// 5 rows x 6 cols. Path: row 2 across cols 0-4, base at col5 row2.
-const TW_ROWS=5,TW_COLS=6;
+// ============ CHICKEN CROSS ============
+const CC_LANES=8;
+const CC_VEHICLES=['🚗','🚕','🚙','🚌','🏎','🚓','🚑','🚒'];
+let cc={active:false,bet:0,lane:0,multi:1,hit:false};
+
+function updateTWBet(){
+  const pct=parseInt(document.getElementById('tw-bet-slider').value);
+  const amt=Math.max(1,Math.floor(G.money*(pct/100)));
+  document.getElementById('tw-pct-label').textContent=pct+'%';
+  document.getElementById('tw-bet-display').textContent=fmt(amt);
+}
+function ccRenderRoad(){
+  const road=document.getElementById('cc-lanes');if(!road)return;
+  road.innerHTML='';
+  for(let i=CC_LANES;i>=0;i--){
+    const lane=document.createElement('div');
+    lane.style.cssText='display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;margin-bottom:3px;min-height:36px;';
+    if(i===0){
+      lane.style.background='#1a3a10';
+      lane.innerHTML=`<span style="font-size:10px;color:var(--g3);min-width:44px;">START</span><span style="font-size:22px;">${cc.lane===0&&cc.active?'🐔':'🟢'}</span>`;
+    } else if(i===CC_LANES){
+      lane.style.background='#1a1a3a';
+      lane.innerHTML=`<span style="font-size:10px;color:#aaf;min-width:44px;">FINISH</span><span style="font-size:18px;">🏆</span><span style="font-size:10px;color:#aaf;margin-left:4px;">${(1+CC_LANES*0.35).toFixed(2)}x</span>`;
+    } else {
+      const isPassed=cc.lane>=i;
+      const isCurrent=cc.active&&cc.lane===i-1&&!cc.hit;
+      const danger=i>=7?'🔴':i>=5?'🟠':i>=3?'🟡':'🟢';
+      lane.style.background=isPassed?'#0d2208':isCurrent?'rgba(240,192,64,0.1)':'#181818';
+      lane.style.border=isCurrent?'1px solid var(--gold)':'1px solid #2a2a2a';
+      lane.style.cursor=isCurrent?'pointer':'default';
+      lane.innerHTML=`<span style="font-size:10px;color:var(--text3);min-width:44px;">${danger} ${(1+i*0.35).toFixed(2)}x</span><span style="font-size:20px;">${CC_VEHICLES[i%CC_VEHICLES.length]}</span><span style="font-size:10px;color:var(--text3);margin-left:4px;">Lane ${i}</span>${isPassed?'<span style="margin-left:auto;font-size:16px;">✅</span>':''}${cc.lane===i&&cc.active?'<span style="margin-left:auto;font-size:22px;">🐔</span>':''}`;
+      if(isCurrent){
+        lane.addEventListener('click',()=>ccCross(i));
+        lane.addEventListener('touchstart',e=>{e.preventDefault();ccCross(i);},{passive:false});
+      }
+    }
+    road.appendChild(lane);
+  }
+  document.getElementById('tw-wave').textContent=cc.lane;
+  document.getElementById('tw-multi').textContent=cc.multi.toFixed(2)+'x';
+  document.getElementById('tw-win').textContent=fmtD(Math.floor(cc.bet*cc.multi));
+}
+function ccStart(){
+  const pct=parseInt(document.getElementById('tw-bet-slider').value);
+  const bet=Math.max(1,Math.floor(G.money*(pct/100)));
+  if(G.money<bet||bet<=0){notify('Not enough money!','#8b2020');return;}
+  G.money-=bet;cc={active:true,bet,lane:0,multi:1,hit:false};
+  document.getElementById('tw-start-btn').disabled=true;
+  document.getElementById('tw-cashout-btn').disabled=false;
+  document.getElementById('tw-status').textContent='Tap the highlighted lane to cross! 🐔';
+  updateTopbar();ccRenderRoad();vibe(30);
+}
+function ccCross(targetLane){
+  if(!cc.active||cc.hit)return;
+  if(targetLane!==cc.lane+1){notify('Cross one lane at a time!','#8b2020');return;}
+  const hitChance=0.08+targetLane*0.07;
+  const hit=Math.random()<hitChance;
+  if(hit){
+    cc.hit=true;cc.active=false;
+    document.getElementById('tw-start-btn').disabled=false;
+    document.getElementById('tw-cashout-btn').disabled=true;
+    document.getElementById('tw-status').textContent='💥 Got hit! Lost '+fmtD(cc.bet);
+    notify('💥 Chicken got hit! Lost '+fmtD(cc.bet),'#8b2020');
+    vibe([200,100,300]);setTimeout(ccReset,2000);
+  } else {
+    cc.lane=targetLane;
+    cc.multi=parseFloat((1+targetLane*0.35).toFixed(2));
+    vibe(25);
+    if(cc.lane>=CC_LANES){ccCashout();return;}
+    document.getElementById('tw-status').textContent='Safe! Keep crossing or cash out 💰';
+    ccRenderRoad();
+  }
+}
+function ccCashout(){
+  if(!cc.active){notify('Start a game first!','#8b2020');return;}
+  const win=Math.floor(cc.bet*cc.multi);
+  G.money+=win;G.totalMoney+=win;cc.active=false;
+  document.getElementById('tw-start-btn').disabled=false;
+  document.getElementById('tw-cashout-btn').disabled=true;
+  document.getElementById('tw-status').textContent='🏆 Cashed out '+fmtD(win)+'! ('+cc.multi.toFixed(2)+'x)';
+  notify('🐔 Won '+fmtD(win)+'!','var(--gold2)');
+  vibe([50,30,80]);updateTopbar();ccRenderRoad();
+}
+function ccReset(){
+  cc={active:false,bet:0,lane:0,multi:1,hit:false};
+  document.getElementById('tw-start-btn').disabled=false;
+  document.getElementById('tw-cashout-btn').disabled=true;
+  document.getElementById('tw-status').textContent='';
+  ccRenderRoad();
+}
 const TW_PATH_CELLS=[[0,0],[1,0],[2,0],[2,1],[2,2],[2,3],[2,4]]; // path tiles
 const TW_BASE=[2,5]; // base location
 let tw={grid:[],towers:[],enemies:[],wave:0,hp:100,bet:0,multi:1,active:false,spawnQ:0,spawnTimer:0};
@@ -1647,7 +1767,7 @@ async function loadBurnLeaderboard(){
 }
 
 // ============ GAME LOOP ============
-let bankSecs2=600;
+let bankSecs2=300;
 let tickCount=0;
 let lastTick=Date.now();
 
@@ -1679,10 +1799,10 @@ setInterval(()=>{
     if(p.state==='growing'&&now>=p.readyAt)G.plots[i].state='ready';
   });
 
-  // bank interest every 10 min
-  bankSecs2--;
+  // bank interest every 5 min (real time)
+  bankSecs2-=dt;
   if(bankSecs2<=0){
-    bankSecs2=600;
+    bankSecs2=300;
     if(G.bankBalance>0){
       const interest=G.bankBalance*0.04;
       G.bankBalance+=interest;G.totalMoney+=interest;
@@ -1717,9 +1837,6 @@ setInterval(()=>{
 
   // plots update
   if(document.getElementById('page-plots').classList.contains('active'))renderPlots();
-
-  // towers tick
-  twTick(0.1);
 
   // main UI update
   updateFarmUI();
@@ -1851,11 +1968,50 @@ async function loadLeaderboard(){
   }).join('');
 }
 
+// ============ CHAT ============
+let chatInited=false;
+function initChat(){
+  loadChatMessages();
+  if(!chatInited){
+    chatInited=true;
+    // Realtime subscription
+    _sb.channel('chat').on('postgres_changes',{event:'INSERT',schema:'public',table:'chat'},payload=>{
+      appendChatMessage(payload.new);
+    }).subscribe();
+  }
+}
+async function loadChatMessages(){
+  const {data}=await _sb.from('chat').select('name,message,created_at').order('created_at',{ascending:true}).limit(50);
+  const el=document.getElementById('chat-messages');if(!el)return;
+  el.innerHTML='';
+  if(data)data.forEach(m=>appendChatMessage(m,false));
+  el.scrollTop=el.scrollHeight;
+}
+function appendChatMessage(m,scroll=true){
+  const el=document.getElementById('chat-messages');if(!el)return;
+  const isMe=m.name===G.playerName;
+  const div=document.createElement('div');
+  div.style.cssText=`display:flex;flex-direction:column;align-items:${isMe?'flex-end':'flex-start'};`;
+  div.innerHTML=`<div style="max-width:80%;background:${isMe?'var(--g2)':'var(--card2)'};padding:7px 10px;border-radius:10px;border:1px solid ${isMe?'var(--g3)':'#2a4018'};">
+    <div style="font-size:10px;color:${isMe?'#c8f0a8':'var(--text3)'};margin-bottom:2px;">${isMe?'You':m.name}</div>
+    <div style="font-size:13px;color:var(--text);">${m.message}</div>
+  </div>`;
+  el.appendChild(div);
+  if(scroll)el.scrollTop=el.scrollHeight;
+}
+async function sendChat(){
+  const input=document.getElementById('chat-input');
+  const msg=input.value.trim();
+  if(!msg){return;}
+  if(!G.playerName){notify('Set your name first!','#8b2020');return;}
+  input.value='';
+  await _sb.from('chat').insert({name:G.playerName,message:msg});
+}
+
 // ============ BOOT ============
 loadGame();
 if(G.playerName){document.getElementById('name-modal').style.display='none';}
 applyOffline();
-twInitGrid();
 updateFarmUI();
 renderFarmUpgrades();
 updateRankDisplay();
