@@ -1608,6 +1608,7 @@ function burnMoney(){
   if(G.money<amt||amt<=0){notify('Not enough money!','#8b2020');return;}
   G.money-=amt;G.burnTotal=(G.burnTotal||0)+amt;
   vibe([50,50,200]);notify('🔥 Burned '+fmtD(amt)+'! FLEX!','#c04020');
+  syncBurnLeaderboard();
   renderBurn();updateTopbar();
 }
 function renderBurn(){
