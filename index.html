@@ -537,12 +537,6 @@ body{display:flex;flex-direction:column;max-width:100vw;}
     </div>
     <div id="rank-list"></div>
   </div>
-  <div class="card">
-    <div class="card-title">💀 VIP Mafia Ranks</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Purchase a VIP rank to show it in chat and leaderboard. One time purchase — flex forever!</div>
-    <div style="font-size:13px;color:var(--gold);font-weight:600;margin-bottom:10px;">Your VIP: <span id="vip-current">None</span></div>
-    <div id="vip-rank-list"></div>
-  </div>
   <div class="footer-brand">Made by SLD</div>
 </div>
 
@@ -585,15 +579,9 @@ body{display:flex;flex-direction:column;max-width:100vw;}
 <div class="page" id="page-leaderboard">
   <div class="card">
     <div class="card-title">🥇 Global Leaderboard</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Top farmers by total money earned.</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Top farmers by total money earned. Updates every 2 minutes.</div>
     <button class="btn btn-sm" style="background:var(--card2);color:var(--text2);border:1px solid #3a5820;margin-bottom:10px;" onclick="loadLeaderboard()">🔄 Refresh</button>
     <div id="leaderboard-list">Loading...</div>
-  </div>
-  <div class="card">
-    <div class="card-title">💰 Active Cash Leaderboard</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Who has the most cash right now!</div>
-    <button class="btn btn-sm" style="background:var(--card2);color:var(--text2);border:1px solid #3a5820;margin-bottom:10px;" onclick="loadCashLeaderboard()">🔄 Refresh</button>
-    <div id="cash-leaderboard-list">Loading...</div>
   </div>
   <div class="footer-brand">Made by SLD</div>
 </div>
@@ -628,16 +616,6 @@ const RANKS=[
 ];
 
 // ============ DATA ============
-const VIP_RANKS=[
-  {id:'associate',name:'The Associate',icon:'🤵',cost:10000000,desc:'Your foot is in the door.'},
-  {id:'soldier',name:'The Soldier',icon:'🔫',cost:50000000,desc:'You pull the trigger.'},
-  {id:'enforcer',name:'The Enforcer',icon:'🗡',cost:200000000,desc:'Fear follows your name.'},
-  {id:'capo',name:'The Capo',icon:'🥃',cost:500000000,desc:'You run your own crew.'},
-  {id:'consigliere',name:'The Consigliere',icon:'🎩',cost:1000000000,desc:'The boss listens to you.'},
-  {id:'underboss',name:'The Underboss',icon:'🦅',cost:5000000000,desc:'One step from the throne.'},
-  {id:'godfather',name:'The Godfather',icon:'👑',cost:20000000000,desc:'You make the offers.'},
-  {id:'immortal',name:'The Immortal Don',icon:'💀',cost:100000000000,desc:'Untouchable. Eternal. Legend.'},
-];
 const FARM_UPGRADES=[
   {id:'h1',name:'Harvest Hands',icon:'👐',desc:'+2 seeds/tap',baseCost:50,max:30,effect:'tap',val:2},
   {id:'a1',name:'Auto Harvester',icon:'🤖',desc:'+0.5 seeds/sec',baseCost:100,max:50,effect:'sps',val:0.5},
@@ -648,13 +626,6 @@ const FARM_UPGRADES=[
   {id:'a4',name:'Climate Control',icon:'🌡',desc:'+30 seeds/sec',baseCost:30000,max:15,effect:'sps',val:30},
   {id:'h4',name:'Master Grower',icon:'👨‍🌾',desc:'+50 seeds/tap',baseCost:60000,max:10,effect:'tap',val:50},
   {id:'a5',name:'AI Farm System',icon:'🤖',desc:'+120 seeds/sec',baseCost:250000,max:10,effect:'sps',val:120},
-  {id:'h5',name:'Golden Hands',icon:'🙌',desc:'+200 seeds/tap',baseCost:800000,max:10,effect:'tap',val:200},
-  {id:'a6',name:'Quantum Grow',icon:'⚛️',desc:'+300 seeds/sec',baseCost:2000000,max:10,effect:'sps',val:300},
-  {id:'h6',name:'Diamond Cutter',icon:'💎',desc:'+500 seeds/tap',baseCost:8000000,max:10,effect:'tap',val:500},
-  {id:'a7',name:'Neural Farm',icon:'🧠',desc:'+800 seeds/sec',baseCost:25000000,max:8,effect:'sps',val:800},
-  {id:'h7',name:'God Hands',icon:'🔱',desc:'+1500 seeds/tap',baseCost:80000000,max:8,effect:'tap',val:1500},
-  {id:'a8',name:'Infinite Grow',icon:'♾️',desc:'+2000 seeds/sec',baseCost:300000000,max:5,effect:'sps',val:2000},
-  {id:'h8',name:'Legend Tap',icon:'🌌',desc:'+4000 seeds/tap',baseCost:1000000000,max:5,effect:'tap',val:4000},
 ];
 
 const SEED_TIERS=[
@@ -668,9 +639,6 @@ const SEED_TIERS=[
   {name:'Black Gold',icon:'🌑',growTime:40,yieldMul:8,sellPrice:280,cost:1500000},
   {name:'Crystal Storm',icon:'❄️',growTime:55,yieldMul:11,sellPrice:450,cost:6000000},
   {name:'Afghan Legend',icon:'🔱',growTime:75,yieldMul:15,sellPrice:800,cost:500000000},
-  {name:'Galaxy Kush',icon:'🌌',growTime:90,yieldMul:20,sellPrice:1200,cost:1000000000},
-  {name:'Divine Afghan',icon:'👼',growTime:110,yieldMul:28,sellPrice:2000,cost:1800000000},
-  {name:'God Seed',icon:'🔱',growTime:140,yieldMul:40,sellPrice:3500,cost:2500000000},
 ];
 
 const REAL_ESTATE=[
@@ -762,24 +730,6 @@ function saveGame(){
   for(const t of TRADE_ITEMS)G['tp_'+t.id]=t.price;
   localStorage.setItem('af_v3',JSON.stringify(G));
 }
-async function saveToCloud(){
-  if(!G.playerName)return;
-  for(const t of TRADE_ITEMS)G['tp_'+t.id]=t.price;
-  await _sb.from('players').upsert({name:G.playerName,game_data:G,updated_at:new Date().toISOString()},{onConflict:'name'});
-}
-async function loadFromCloud(name){
-  const {data,error}=await _sb.from('players').select('game_data').eq('name',name).single();
-  if(data&&data.game_data){
-    G=data.game_data;
-    G.playerName=name; // always preserve the name
-    for(const k in DEF)if(G[k]===undefined)G[k]=JSON.parse(JSON.stringify(DEF[k]));
-    for(const t of TRADE_ITEMS){if(G['tp_'+t.id])t.price=G['tp_'+t.id];}
-    for(const b of BEGGARS){b.donated=G.beggars[b.id]||0;}
-    localStorage.setItem('af_v3',JSON.stringify(G));
-    return true;
-  }
-  return false;
-}
 
 // ============ HELPERS ============
 function fmt(n){
@@ -807,17 +757,12 @@ function notify(msg,color='var(--g2)'){
 function vibe(ms=30){if(navigator.vibrate)navigator.vibrate(ms);}
 
 // ============ NAME / MODAL ============
-async function setName(){
+function setName(){
   const n=document.getElementById('name-input').value.trim();
-  if(!n){notify('Enter your name!','#8b2020');return;}
-  G.playerName=n;
+  G.playerName=n||'Farmer';
   document.getElementById('name-modal').style.display='none';
-  notify('Loading your data...','var(--gold2)');
-  const found=await loadFromCloud(G.playerName);
-  if(found){notify('Welcome back '+G.playerName+'!','var(--g2)');}
-  else{notify('New farmer created!','var(--g2)');}
-  updateRankDisplay();updateFarmUI();renderFarmUpgrades();
-  saveGame();saveToCloud();
+  updateRankDisplay();
+  saveGame();
 }
 
 // ============ TABS ============
@@ -836,14 +781,14 @@ function showTab(name){
   if(name==='trade')renderTrade();
   if(name==='beggars')renderBeggars();
   if(name==='burn')renderBurn();
-  if(name==='ranks'){renderRanks();renderVIPRanks();}
+  if(name==='ranks')renderRanks();
   if(name==='mines')updateMinesBet();
   if(name==='blackjack')updateBJBet();
   if(name==='roulette'){updateRLBet();}
   if(name==='towers'){updateTWBet();ccRenderRoad();}
   if(name==='transfer'){renderTransferTab();loadTransfers();}
-  if(name==='chat'){initChat();if(!chatPollInterval)chatPollInterval=setInterval(()=>{if(document.getElementById('page-chat').classList.contains('active'))loadChatMessages();},30000);}
-  if(name==='leaderboard'){loadLeaderboard();loadCashLeaderboard();}
+  if(name==='chat'){initChat();if(!chatPollInterval)chatPollInterval=setInterval(()=>{if(document.getElementById('page-chat').classList.contains('active'))loadChatMessages();},3000);}
+  if(name==='leaderboard')loadLeaderboard();
 }
 
 // ============ RANK ============
@@ -1270,33 +1215,22 @@ function updateTradePrice(){
 }
 function renderTrade(){
   const el=document.getElementById('trade-list');el.innerHTML='';
-  // portfolio total
-  let portfolioVal=0;
-  for(const t of TRADE_ITEMS){const owned=G.tradeOwned[t.id]||0;portfolioVal+=owned*Math.floor(t.price);}
-  el.innerHTML=`<div style="background:var(--card2);border-radius:var(--radius-sm);padding:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
-    <span style="font-size:12px;color:var(--text3);">Portfolio Value</span>
-    <span style="font-size:15px;font-weight:700;color:var(--gold);">${fmtD(portfolioVal)}</span>
-  </div>
-  <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">⚠️ Trade profits do NOT count toward leaderboard</div>`;
   for(const t of TRADE_ITEMS){
     const owned=G.tradeOwned[t.id]||0;
-    const buyPrice=(G.tradeBuyPrice&&G.tradeBuyPrice[t.id])||t.basePrice;
-    const pnl=owned>0?Math.floor((t.price-buyPrice)*owned):0;
-    const pnlUp=pnl>=0;
     const pctChg=((t.price-t.basePrice)/t.basePrice)*100;
     const up=pctChg>=0;
     const div=document.createElement('div');
     div.className='stock-card';
-    div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <div><div style="font-size:14px;font-weight:600;color:var(--text);">${t.icon} ${t.name}</div>
-      ${owned>0?`<div style="font-size:10px;color:${pnlUp?'#4cff90':'var(--red)'};">Holding ${owned}u · P&L ${pnlUp?'+':''}${fmtD(pnl)}</div>`:'<div style="font-size:10px;color:var(--text3);">Not holding</div>'}</div>
-      <div style="text-align:right;"><div style="font-size:16px;font-weight:700;color:var(--gold);">${fmtD(Math.floor(t.price))}</div>
-      <div style="font-size:11px;font-weight:600;color:${up?'#4cff90':'var(--red)'};">${up?'▲':'▼'} ${Math.abs(pctChg).toFixed(1)}%</div></div>
+    div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+      <div><div class="stock-name">${t.icon} ${t.name}</div><div class="stock-owned">Owned: ${owned} units</div></div>
+      <div style="text-align:right"><div class="stock-price">${fmtD(Math.floor(t.price))}</div><div class="stock-change ${up?'up':'down'}">${up?'▲':'▼'} ${Math.abs(pctChg).toFixed(1)}%</div></div>
     </div>
-    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-      <input type="number" id="tq_${t.id}" class="game-input" placeholder="Qty" min="1" style="width:65px;padding:7px 8px;font-size:12px;">
+    <div class="price-bar"></div>
+    <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap">
+      <input type="number" id="tq_${t.id}" class="game-input" placeholder="Qty" min="1" style="width:70px;padding:7px 8px;font-size:12px">
       <button class="btn btn-green btn-sm" onclick="tradeBuy('${t.id}')">Buy</button>
-      <button class="btn btn-red btn-sm" onclick="tradeSell('${t.id}')" ${owned===0?'disabled':''}>Sell</button>
+      <button class="btn btn-red btn-sm" onclick="tradeSell('${t.id}')">Sell</button>
+      <span style="font-size:11px;color:var(--text3)">Cost: ${fmtD(Math.floor(t.price))}/u</span>
     </div>`;
     el.appendChild(div);
   }
@@ -1306,12 +1240,8 @@ function tradeBuy(id){
   const qty=parseInt(document.getElementById('tq_'+id).value)||1;
   const cost=Math.floor(t.price)*qty;
   if(G.money<cost){notify('Need '+fmtD(cost),'#8b2020');return;}
-  G.money-=cost;
-  G.tradeOwned[id]=(G.tradeOwned[id]||0)+qty;
-  if(!G.tradeBuyPrice)G.tradeBuyPrice={};
-  G.tradeBuyPrice[id]=Math.floor(t.price); // track buy price
-  vibe(30);notify('Bought '+qty+'x '+t.name+' @ '+fmtD(Math.floor(t.price)));
-  renderTrade();updateTopbar();
+  G.money-=cost;G.tradeOwned[id]=(G.tradeOwned[id]||0)+qty;
+  vibe(30);notify('Bought '+qty+'x '+t.name);renderTrade();updateTopbar();
 }
 function tradeSell(id){
   const t=TRADE_ITEMS.find(t=>t.id===id);
@@ -1319,10 +1249,9 @@ function tradeSell(id){
   const owned=G.tradeOwned[id]||0;
   if(owned<qty){notify('Not enough units!','#8b2020');return;}
   const earned=Math.floor(t.price)*qty;
-  G.money+=earned; // only adds to cash, NOT totalMoney
+  G.money+=earned;G.totalMoney+=earned;
   G.tradeOwned[id]-=qty;
-  vibe(30);notify('Sold '+qty+'x for '+fmtD(earned)+'!');
-  renderTrade();updateTopbar();
+  vibe(30);notify('Sold for '+fmtD(earned)+'!');renderTrade();updateTopbar();
 }
 
 // ============ MINES ============
@@ -1802,48 +1731,7 @@ function burnMoney(){
   syncBurnLeaderboard();
   renderBurn();updateTopbar();
 }
-function renderVIPRanks(){
-  const el=document.getElementById('vip-rank-list');if(!el)return;
-  const current=G.vipRank||'';
-  document.getElementById('vip-current').textContent=current?VIP_RANKS.find(v=>v.id===current)?.icon+' '+VIP_RANKS.find(v=>v.id===current)?.name:'None';
-  el.innerHTML='';
-  for(const v of VIP_RANKS){
-    const owned=G.vipRank===v.id||G.vipRankHistory&&G.vipRankHistory.includes(v.id);
-    const isActive=G.vipRank===v.id;
-    const canBuy=G.money>=v.cost;
-    const div=document.createElement('div');
-    div.style.cssText=`display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--radius-sm);margin-bottom:7px;background:${isActive?'rgba(240,192,64,0.1)':'var(--card2)'};border:1px solid ${isActive?'var(--gold)':owned?'var(--g2)':'#2a4018'};`;
-    div.innerHTML=`<span style="font-size:24px;">${v.icon}</span>
-      <div style="flex:1;">
-        <div style="font-size:13px;font-weight:700;color:${isActive?'var(--gold)':'var(--text)'};">${v.name}</div>
-        <div style="font-size:10px;color:var(--text3);">${v.desc}</div>
-        <div style="font-size:11px;color:var(--gold);margin-top:2px;">${fmtD(v.cost)}</div>
-      </div>
-      ${isActive?'<span style="font-size:11px;color:var(--gold);font-weight:600;">ACTIVE</span>':owned?`<button class="btn btn-sm btn-green" onclick="equipVIP('${v.id}')">Equip</button>`:`<button class="btn btn-sm btn-gold" ${canBuy?'':'disabled'} onclick="buyVIP('${v.id}')">${canBuy?'Buy':'🔒'}</button>`}`;
-    el.appendChild(div);
-  }
-}
-function buyVIP(id){
-  const v=VIP_RANKS.find(v=>v.id===id);
-  if(G.money<v.cost){notify('Not enough money!','#8b2020');return;}
-  G.money-=v.cost;
-  G.vipRank=id;
-  if(!G.vipRankHistory)G.vipRankHistory=[];
-  if(!G.vipRankHistory.includes(id))G.vipRankHistory.push(id);
-  vibe(80);notify(v.icon+' '+v.name+' VIP rank purchased!','var(--gold2)');
-  syncLeaderboard();renderVIPRanks();updateTopbar();saveGame();
-}
-function equipVIP(id){
-  const v=VIP_RANKS.find(v=>v.id===id);
-  G.vipRank=id;
-  notify(v.icon+' '+v.name+' equipped!','var(--gold2)');
-  syncLeaderboard();renderVIPRanks();saveGame();
-}
-function getVIPBadge(){
-  if(!G.vipRank)return'';
-  const v=VIP_RANKS.find(v=>v.id===G.vipRank);
-  return v?` ${v.icon} ${v.name}`:'';
-}
+function renderBurn(){
   updateBurnSlider();
   document.getElementById('burn-total').textContent=fmtD(G.burnTotal||0);
   const br=BURN_RANKS.slice().reverse().find(r=>(G.burnTotal||0)>=r.req)||BURN_RANKS[0];
@@ -1955,9 +1843,7 @@ setInterval(()=>{
   updateRankDisplay();
 
   // save every 5s
-  // save locally every 5s, cloud every 2min
   if(tickCount%50===0)saveGame();
-  if(tickCount%1200===0)saveToCloud();
 
 },100);
 
@@ -2056,29 +1942,9 @@ async function checkIncoming(){
 const MEDALS=['🥇','🥈','🥉'];
 async function syncLeaderboard(){
   if(!G.playerName)return;
-  const vip=G.vipRank||'';
-  const vipData=VIP_RANKS.find(v=>v.id===vip);
-  const vipLabel=vipData?vipData.icon+' '+vipData.name:'';
-  await _sb.from('leaderboard').upsert({name:G.playerName,total_money:Math.floor(G.totalMoney),current_money:Math.floor(G.money),vip_rank:vipLabel,updated_at:new Date().toISOString()},{onConflict:'name'});
+  await _sb.from('leaderboard').upsert({name:G.playerName,total_money:Math.floor(G.totalMoney),updated_at:new Date().toISOString()},{onConflict:'name'});
 }
-async function loadCashLeaderboard(){
-  const el=document.getElementById('cash-leaderboard-list');if(!el)return;
-  el.textContent='Loading...';
-  const {data,error}=await _sb.from('leaderboard').select('name,current_money').order('current_money',{ascending:false}).limit(20);
-  if(error||!data){el.textContent='Could not load.';return;}
-  if(data.length===0){el.textContent='No data yet.';return;}
-  const myName=G.playerName||'';
-  el.innerHTML=data.map((p,i)=>{
-    const medal=MEDALS[i]||(i+1)+'.';
-    const isMe=p.name===myName;
-    return`<div style="display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid #2a4018;background:${isMe?'rgba(240,192,64,0.07)':'transparent'};border-radius:4px;">
-      <span style="font-size:16px;min-width:24px;text-align:center;">${medal}</span>
-      <div style="flex:1;font-size:13px;font-weight:600;color:${isMe?'var(--gold)':'var(--text)'};">${p.name}${isMe?' (you)':''}</div>
-      <div style="font-size:13px;font-weight:600;color:var(--gold);">${fmtD(p.current_money||0)}</div>
-    </div>`;
-  }).join('');
-}
-
+async function loadLeaderboard(){
   const el=document.getElementById('leaderboard-list');
   if(!el)return;
   el.textContent='Loading...';
@@ -2128,7 +1994,7 @@ function appendChatMessage(m,scroll=true){
   const div=document.createElement('div');
   div.style.cssText=`display:flex;flex-direction:column;align-items:${isMe?'flex-end':'flex-start'};`;
   div.innerHTML=`<div style="max-width:80%;background:${isMe?'var(--g2)':'var(--card2)'};padding:7px 10px;border-radius:10px;border:1px solid ${isMe?'var(--g3)':'#2a4018'};">
-    <div style="font-size:10px;color:${isMe?'#c8f0a8':'var(--text3)'};margin-bottom:2px;">${isMe?'You':m.name}${m.vip_rank?` <span style="color:var(--gold);font-size:9px;">${m.vip_rank}</span>`:''}</div>
+    <div style="font-size:10px;color:${isMe?'#c8f0a8':'var(--text3)'};margin-bottom:2px;">${isMe?'You':m.name}</div>
     <div style="font-size:13px;color:var(--text);">${m.message}</div>
   </div>`;
   el.appendChild(div);
@@ -2140,23 +2006,16 @@ async function sendChat(){
   if(!msg){return;}
   if(!G.playerName){notify('Set your name first!','#8b2020');return;}
   input.value='';
-  const vipData=VIP_RANKS.find(v=>v.id===G.vipRank);
-  const vipLabel=vipData?vipData.icon+' '+vipData.name:'';
-  await _sb.from('chat').insert({name:G.playerName,message:msg,vip_rank:vipLabel});
+  await _sb.from('chat').insert({name:G.playerName,message:msg});
 }
 
 // ============ BOOT ============
 loadGame();
-if(G.playerName){
-  document.getElementById('name-modal').style.display='none';
-  // load latest data from cloud for returning players
-  loadFromCloud(G.playerName).then(found=>{
-    if(found)notify('Progress synced from cloud!','var(--g2)');
-    applyOffline();updateFarmUI();renderFarmUpgrades();updateRankDisplay();
-  });
-} else {
-  applyOffline();updateFarmUI();renderFarmUpgrades();updateRankDisplay();
-}
+if(G.playerName){document.getElementById('name-modal').style.display='none';}
+applyOffline();
+updateFarmUI();
+renderFarmUpgrades();
+updateRankDisplay();
 updateBurnSlider();
 // Check incoming transfers every 60s only
 checkIncoming();
