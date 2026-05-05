@@ -638,7 +638,7 @@ const SEED_TIERS=[
   {name:'White Widow',icon:'🕷',growTime:30,yieldMul:6.5,sellPrice:180,cost:400000},
   {name:'Black Gold',icon:'🌑',growTime:40,yieldMul:8,sellPrice:280,cost:1500000},
   {name:'Crystal Storm',icon:'❄️',growTime:55,yieldMul:11,sellPrice:450,cost:6000000},
-  {name:'Afghan Legend',icon:'🔱',growTime:75,yieldMul:15,sellPrice:800,cost:25000000},
+  {name:'Afghan Legend',icon:'🔱',growTime:75,yieldMul:15,sellPrice:800,cost:500000000},
 ];
 
 const REAL_ESTATE=[
@@ -787,7 +787,7 @@ function showTab(name){
   if(name==='roulette'){updateRLBet();}
   if(name==='towers'){updateTWBet();ccRenderRoad();}
   if(name==='transfer'){renderTransferTab();loadTransfers();}
-  if(name==='chat')initChat();
+  if(name==='chat'){initChat();if(!chatPollInterval)chatPollInterval=setInterval(()=>{if(document.getElementById('page-chat').classList.contains('active'))loadChatMessages();},3000);}
   if(name==='leaderboard')loadLeaderboard();
 }
 
@@ -1970,6 +1970,7 @@ async function loadLeaderboard(){
 
 // ============ CHAT ============
 let chatInited=false;
+let chatPollInterval=null;
 function initChat(){
   loadChatMessages();
   if(!chatInited){
