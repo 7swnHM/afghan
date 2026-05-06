@@ -583,6 +583,12 @@ body{display:flex;flex-direction:column;max-width:100vw;}
     <button class="btn btn-sm" style="background:var(--card2);color:var(--text2);border:1px solid #3a5820;margin-bottom:10px;" onclick="loadLeaderboard()">🔄 Refresh</button>
     <div id="leaderboard-list">Loading...</div>
   </div>
+  <div class="card">
+    <div class="card-title">💰 Active Cash Leaderboard</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Who has the most cash right now!</div>
+    <button class="btn btn-sm" style="background:var(--card2);color:var(--text2);border:1px solid #3a5820;margin-bottom:10px;" onclick="loadCashLeaderboard()">🔄 Refresh</button>
+    <div id="cash-leaderboard-list">Loading...</div>
+  </div>
   <div class="footer-brand">Made by SLD</div>
 </div>
 
@@ -740,6 +746,24 @@ function saveGame(){
   for(const t of TRADE_ITEMS)G['tp_'+t.id]=t.price;
   localStorage.setItem('af_v3',JSON.stringify(G));
 }
+async function saveToCloud(){
+  if(!G.playerName)return;
+  for(const t of TRADE_ITEMS)G['tp_'+t.id]=t.price;
+  await _sb.from('players').upsert({name:G.playerName,game_data:G,updated_at:new Date().toISOString()},{onConflict:'name'});
+}
+async function loadFromCloud(name){
+  const {data}=await _sb.from('players').select('game_data').eq('name',name).single();
+  if(data&&data.game_data){
+    G=data.game_data;
+    G.playerName=name;
+    for(const k in DEF)if(G[k]===undefined)G[k]=JSON.parse(JSON.stringify(DEF[k]));
+    for(const t of TRADE_ITEMS)if(G['tp_'+t.id])t.price=G['tp_'+t.id];
+    for(const b of BEGGARS)b.donated=G.beggars[b.id]||0;
+    localStorage.setItem('af_v3',JSON.stringify(G));
+    return true;
+  }
+  return false;
+}
 
 // ============ HELPERS ============
 function fmt(n){
@@ -767,12 +791,17 @@ function notify(msg,color='var(--g2)'){
 function vibe(ms=30){if(navigator.vibrate)navigator.vibrate(ms);}
 
 // ============ NAME / MODAL ============
-function setName(){
+async function setName(){
   const n=document.getElementById('name-input').value.trim();
-  G.playerName=n||'Farmer';
+  if(!n){notify('Enter your name!','#8b2020');return;}
+  G.playerName=n;
   document.getElementById('name-modal').style.display='none';
-  updateRankDisplay();
-  saveGame();
+  notify('Loading...','var(--gold2)');
+  const found=await loadFromCloud(G.playerName);
+  if(found){notify('Welcome back '+G.playerName+'!');}
+  else{notify('New farmer created!');}
+  updateRankDisplay();updateFarmUI();renderFarmUpgrades();
+  saveGame();saveToCloud();
 }
 
 // ============ TABS ============
@@ -798,7 +827,7 @@ function showTab(name){
   if(name==='towers'){updateTWBet();ccRenderRoad();}
   if(name==='transfer'){renderTransferTab();loadTransfers();}
   if(name==='chat'){initChat();if(!chatPollInterval)chatPollInterval=setInterval(()=>{if(document.getElementById('page-chat').classList.contains('active'))loadChatMessages();},3000);}
-  if(name==='leaderboard')loadLeaderboard();
+  if(name==='leaderboard'){loadLeaderboard();loadCashLeaderboard();}
 }
 
 // ============ RANK ============
@@ -1952,7 +1981,7 @@ async function checkIncoming(){
 const MEDALS=['🥇','🥈','🥉'];
 async function syncLeaderboard(){
   if(!G.playerName)return;
-  await _sb.from('leaderboard').upsert({name:G.playerName,total_money:Math.floor(G.totalMoney),updated_at:new Date().toISOString()},{onConflict:'name'});
+  await _sb.from('leaderboard').upsert({name:G.playerName,total_money:Math.floor(G.totalMoney),current_money:Math.floor(G.money),updated_at:new Date().toISOString()},{onConflict:'name'});
 }
 async function loadLeaderboard(){
   const el=document.getElementById('leaderboard-list');
@@ -1978,7 +2007,23 @@ async function loadLeaderboard(){
   }).join('');
 }
 
-// ============ CHAT ============
+async function loadCashLeaderboard(){
+  const el=document.getElementById('cash-leaderboard-list');if(!el)return;
+  el.textContent='Loading...';
+  const {data,error}=await _sb.from('leaderboard').select('name,current_money').order('current_money',{ascending:false}).limit(20);
+  if(error||!data){el.textContent='Could not load.';return;}
+  if(data.length===0){el.textContent='No data yet.';return;}
+  const myName=G.playerName||'';
+  el.innerHTML=data.map((p,i)=>{
+    const medal=MEDALS[i]||(i+1)+'.';
+    const isMe=p.name===myName;
+    return`<div style="display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid #2a4018;background:${isMe?'rgba(240,192,64,0.07)':'transparent'};border-radius:4px;">
+      <span style="font-size:16px;min-width:24px;text-align:center;">${medal}</span>
+      <div style="flex:1;font-size:13px;font-weight:600;color:${isMe?'var(--gold)':'var(--text)'};">${p.name}${isMe?' (you)':''}</div>
+      <div style="font-size:13px;font-weight:600;color:var(--gold);">${fmtD(p.current_money||0)}</div>
+    </div>`;
+  }).join('');
+}
 let chatInited=false;
 let chatPollInterval=null;
 function initChat(){
@@ -2021,19 +2066,24 @@ async function sendChat(){
 
 // ============ BOOT ============
 loadGame();
-if(G.playerName){document.getElementById('name-modal').style.display='none';}
-applyOffline();
-updateFarmUI();
-renderFarmUpgrades();
-updateRankDisplay();
+if(G.playerName){
+  document.getElementById('name-modal').style.display='none';
+  loadFromCloud(G.playerName).then(found=>{
+    if(found)notify('Progress loaded!');
+    applyOffline();updateFarmUI();renderFarmUpgrades();updateRankDisplay();
+  });
+} else {
+  applyOffline();updateFarmUI();renderFarmUpgrades();updateRankDisplay();
+}
 updateBurnSlider();
-// Check incoming transfers every 60s only
 checkIncoming();
 setInterval(checkIncoming, 5000);
 syncLeaderboard();
 setInterval(syncLeaderboard, 120000);
 syncBurnLeaderboard();
 setInterval(syncBurnLeaderboard, 120000);
+saveToCloud();
+setInterval(saveToCloud, 120000);
 // Start chat realtime at boot
 _sb.channel('chat').on('postgres_changes',{event:'INSERT',schema:'public',table:'chat'},payload=>{
   appendChatMessage(payload.new);
